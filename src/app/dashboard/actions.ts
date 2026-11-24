@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProfile } from "@/lib/auth";
 import { processMessage } from "@/lib/send-worker";
+import { isEmailConfigured, sendEmail } from "@/lib/email";
+import { siteUrl } from "@/lib/site";
 import type { ListType, PostingPolicy } from "@/lib/database.types";
 
 function slugify(input: string): string {
@@ -118,12 +120,20 @@ export async function deleteListAction(formData: FormData) {
 
 // --------------------------- subscribers ---------------------------
 
+export interface AddSubscribersState {
+  error: string | null;
+  message: string | null;
+}
+
 export async function addSubscribersAction(
-  _prev: { error: string | null; added: number },
+  _prev: AddSubscribersState,
   formData: FormData,
-): Promise<{ error: string | null; added: number }> {
-  const { supabase } = await requireAdminClient();
+): Promise<AddSubscribersState> {
+  await requireAdminClient(); // authorize caller
+  const admin = createAdminClient();
+
   const listId = String(formData.get("list_id") ?? "");
+  const skipConfirmation = formData.get("skip_confirmation") === "on";
   const raw = String(formData.get("emails") ?? "");
   const emails = Array.from(
     new Set(
@@ -134,24 +144,115 @@ export async function addSubscribersAction(
     ),
   );
   if (!listId || emails.length === 0) {
-    return { error: "Enter at least one valid email.", added: 0 };
+    return { error: "Enter at least one valid email.", message: null };
   }
 
-  // Admin-added subscribers are confirmed immediately.
-  const rows = emails.map((email) => ({
-    list_id: listId,
-    email,
-    status: "confirmed" as const,
-    confirmed_at: new Date().toISOString(),
-  }));
+  const { data: listRow } = await admin
+    .from("lists")
+    .select("name")
+    .eq("id", listId)
+    .single();
+  const listName = (listRow as { name: string } | null)?.name ?? "the list";
 
-  const { error } = await supabase
+  const { data: existingRows } = await admin
     .from("subscriptions")
-    .upsert(rows, { onConflict: "list_id,email", ignoreDuplicates: true });
+    .select("id, email, status, confirm_token")
+    .eq("list_id", listId)
+    .in("email", emails);
+  const existing = new Map(
+    ((existingRows as {
+      id: string;
+      email: string;
+      status: string;
+      confirm_token: string;
+    }[]) ?? []).map((r) => [r.email.toLowerCase(), r]),
+  );
 
-  if (error) return { error: error.message, added: 0 };
+  let confirmed = 0;
+  let already = 0;
+  const pending: { email: string; token: string }[] = [];
+
+  for (const email of emails) {
+    const ex = existing.get(email);
+    if (ex?.status === "confirmed") {
+      already++;
+      continue;
+    }
+
+    if (skipConfirmation) {
+      await admin.from("subscriptions").upsert(
+        {
+          list_id: listId,
+          email,
+          status: "confirmed",
+          confirmed_at: new Date().toISOString(),
+        },
+        { onConflict: "list_id,email" },
+      );
+      confirmed++;
+    } else if (ex) {
+      // Re-send: reset to pending, reuse the row's confirm token.
+      await admin
+        .from("subscriptions")
+        .update({ status: "pending" })
+        .eq("id", ex.id);
+      pending.push({ email, token: ex.confirm_token });
+    } else {
+      const { data, error } = await admin
+        .from("subscriptions")
+        .insert({ list_id: listId, email })
+        .select("confirm_token")
+        .single();
+      if (!error && data) {
+        pending.push({
+          email,
+          token: (data as { confirm_token: string }).confirm_token,
+        });
+      }
+    }
+  }
+
+  // Send confirmation (double opt-in) emails to the pending ones.
+  let sent = 0;
+  let failed = 0;
+  if (pending.length > 0) {
+    if (!isEmailConfigured()) {
+      revalidatePath(`/dashboard/lists/${listId}`);
+      return {
+        error: null,
+        message: `${pending.length} added as pending, but email isn't configured, so no confirmation emails were sent.`,
+      };
+    }
+    for (const { email, token } of pending) {
+      const confirmUrl = `${siteUrl()}/confirm?token=${token}`;
+      try {
+        await sendEmail({
+          to: email,
+          subject: `Confirm your subscription to ${listName}`,
+          text:
+            `You've been added to "${listName}".\n\n` +
+            `Please confirm your subscription:\n${confirmUrl}\n\n` +
+            `If you don't want to join, you can ignore this email.`,
+        });
+        sent++;
+      } catch {
+        failed++;
+      }
+    }
+  }
+
   revalidatePath(`/dashboard/lists/${listId}`);
-  return { error: null, added: emails.length };
+
+  const parts: string[] = [];
+  if (sent) parts.push(`${sent} confirmation email${sent === 1 ? "" : "s"} sent`);
+  if (confirmed) parts.push(`${confirmed} added as confirmed`);
+  if (already) parts.push(`${already} already subscribed`);
+  if (failed) parts.push(`${failed} failed to send`);
+
+  return {
+    error: null,
+    message: parts.length ? parts.join(" · ") : "Nothing to add.",
+  };
 }
 
 export async function setSubscriptionStatusAction(formData: FormData) {
