@@ -14,13 +14,13 @@ export default async function GroupsLayout({
   const name = displayName(profile.email, profile.full_name);
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="bg-[#2b3e50] text-white shadow">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <div className="min-h-screen bg-[#2d3139] text-slate-200">
+      <header className="bg-[#2b6cb0] text-white shadow">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-6">
-            <Link href="/groups" className="flex items-center gap-2 font-semibold">
+            <Link href="/groups" className="flex items-center gap-2 font-semibold text-white">
               <svg
-                className="h-6 w-6 text-[#4a90d2]"
+                className="h-6 w-6"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -34,7 +34,7 @@ export default async function GroupsLayout({
               </svg>
               ListServ Groups
             </Link>
-            <nav className="hidden items-center gap-5 text-sm text-slate-200 sm:flex">
+            <nav className="hidden items-center gap-5 text-sm text-blue-100 sm:flex">
               <Link href="/groups" className="hover:text-white">
                 Your Groups
               </Link>
@@ -45,15 +45,15 @@ export default async function GroupsLayout({
           </div>
           <div className="flex items-center gap-3 text-sm">
             {profile.role === "admin" && (
-              <Link href="/dashboard" className="text-slate-200 hover:text-white">
+              <Link href="/dashboard" className="text-blue-100 hover:text-white">
                 Admin
               </Link>
             )}
-            <span className="hidden text-slate-300 sm:inline">{name}</span>
+            <span className="hidden text-blue-100 sm:inline">{name}</span>
             <form action={signOutAction}>
               <button
                 type="submit"
-                className="rounded border border-white/20 px-3 py-1.5 text-slate-100 hover:bg-white/10"
+                className="rounded border border-white/30 px-3 py-1.5 text-white hover:bg-white/10"
               >
                 Sign out
               </button>
@@ -61,7 +61,7 @@ export default async function GroupsLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      {children}
     </div>
   );
 }

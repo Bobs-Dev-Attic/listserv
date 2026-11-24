@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { List } from "@/lib/database.types";
+import type { List, DeliveryMode } from "@/lib/database.types";
 import { GroupSidebar } from "@/components/group-sidebar";
 import { NewTopicForm } from "./new-topic-form";
 
@@ -28,41 +28,48 @@ export default async function NewTopicPage({
 
   const { data: membership } = await supabase
     .from("subscriptions")
-    .select("status")
+    .select("status, delivery_mode")
     .eq("list_id", list.id)
     .eq("profile_id", user!.id)
     .maybeSingle();
+  const member = membership as {
+    status: string;
+    delivery_mode: DeliveryMode;
+  } | null;
   const canPost =
-    (membership as { status: string } | null)?.status === "confirmed" &&
+    member?.status === "confirmed" &&
     (list.type === "discussion" || list.type === "both") &&
     list.posting_policy === "subscribers";
   if (!canPost) redirect(`/groups/${slug}`);
 
   return (
-    <div className="grid gap-6 md:grid-cols-[14rem_1fr]">
+    <div className="flex min-h-[calc(100vh-3.5rem)]">
       <GroupSidebar
         slug={slug}
         listId={list.id}
         name={list.name}
         canPost={canPost}
         active="new"
+        deliveryMode={member?.delivery_mode}
       />
 
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
-          <Link href="/groups" className="hover:text-slate-900">
-            Groups
-          </Link>
-          <span>/</span>
-          <Link href={`/groups/${slug}`} className="hover:text-slate-900">
-            {list.name}
-          </Link>
-          <span>/</span>
-          <span>New topic</span>
-        </div>
-        <h1 className="mb-4 text-2xl font-bold text-slate-900">New topic</h1>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
-          <NewTopicForm slug={slug} />
+      <div className="min-w-0 flex-1 px-4 py-5 md:px-8">
+        <div className="mx-auto w-full max-w-3xl">
+          <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
+            <Link href="/groups" className="hover:text-white">
+              Groups
+            </Link>
+            <span>/</span>
+            <Link href={`/groups/${slug}`} className="hover:text-white">
+              {list.name}
+            </Link>
+            <span>/</span>
+            <span>New topic</span>
+          </div>
+          <h1 className="mb-4 text-2xl font-bold text-white">New topic</h1>
+          <div className="rounded-lg border border-white/10 bg-[#343842] p-6">
+            <NewTopicForm slug={slug} />
+          </div>
         </div>
       </div>
     </div>

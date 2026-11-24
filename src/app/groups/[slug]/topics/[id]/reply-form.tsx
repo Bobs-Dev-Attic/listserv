@@ -9,7 +9,6 @@ export function ReplyForm({ slug, topicId }: { slug: string; topicId: string }) 
   const [state, formAction, pending] = useActionState(replyAction, initial);
   const ref = useRef<HTMLFormElement>(null);
 
-  // Clear the box after a successful post (the thread revalidates separately).
   useEffect(() => {
     if (!pending && state.error === null) ref.current?.reset();
   }, [pending, state]);
@@ -23,15 +22,19 @@ export function ReplyForm({ slug, topicId }: { slug: string; topicId: string }) 
         rows={4}
         required
         placeholder="Write a reply…"
-        className="input"
+        className="w-full rounded-md border border-white/15 bg-[#2d3139] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-[#4a90d2] focus:outline-none"
       />
       {state.error && (
-        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
           {state.error}
         </p>
       )}
       <div className="flex justify-end">
-        <button type="submit" className="btn-primary" disabled={pending}>
+        <button
+          type="submit"
+          className="rounded bg-[#4a90d2] px-4 py-2 font-medium text-white hover:bg-[#3b7bbf] disabled:opacity-50"
+          disabled={pending}
+        >
           {pending ? "Posting…" : "Post reply"}
         </button>
       </div>
