@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site";
+import { logAudit } from "@/lib/audit";
 import type { List, Message } from "@/lib/database.types";
 
 export interface DigestSummary {
@@ -106,6 +107,15 @@ export async function processDigests(): Promise<DigestSummary> {
         "id",
         msgs.map((m) => m.id),
       );
+  }
+
+  if (summary.sent > 0) {
+    await logAudit({
+      action: "email.digest",
+      targetType: "email",
+      summary: `Sent ${summary.sent} digest email(s) across ${summary.lists} list(s)`,
+      metadata: { ...summary },
+    });
   }
 
   return summary;

@@ -42,6 +42,7 @@ export default async function DashboardLayout({
             { href: "/dashboard", label: "Overview", exact: true },
             { href: "/dashboard/lists", label: "Lists" },
             { href: "/dashboard/users", label: "Users" },
+            { href: "/dashboard/audit", label: "Audit log" },
             { href: "/dashboard/smtp", label: "SMTP" },
           ]}
         />

@@ -3,6 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site";
+import { logAudit } from "@/lib/audit";
 import type { List, Subscription } from "@/lib/database.types";
 
 export interface SubscribeState {
@@ -82,6 +83,13 @@ export async function subscribeAction(
           `You (or someone using this address) asked to join "${list.name}".\n\n` +
           `Confirm your subscription:\n${confirmUrl}\n\n` +
           `If you didn't request this, you can ignore this email.`,
+      });
+      await logAudit({
+        action: "email.confirmation",
+        actorEmail: email,
+        targetType: "list",
+        targetId: list.id,
+        summary: `Sent a subscribe confirmation for "${list.name}" to ${email}`,
       });
       return {
         ok: true,
