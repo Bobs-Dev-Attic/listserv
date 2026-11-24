@@ -93,22 +93,59 @@ account, then head to **/dashboard**.
 3. Add **`CRON_SECRET`** (any random string) to secure the cron endpoint.
 4. Deploy. `vercel.json` registers a daily cron hitting `/api/send`.
 
-## Email delivery (plug in later)
+## Email delivery (list / broadcast emails)
 
-The app is built to queue everything now and deliver once a provider is
-configured — no code changes required for Resend:
+List emails are sent through a pluggable provider layer (`src/lib/email.ts`).
+Choose one with `EMAIL_PROVIDER`; every provider needs `EMAIL_FROM` set to an
+address on a **domain you've verified**.
 
-1. Set `EMAIL_FROM="Your List <list@yourdomain.com>"`.
-2. Set `RESEND_API_KEY=...` (verify your sending domain in Resend first).
-3. New sends deliver immediately; already-queued messages drain on the next cron
-   run or when you hit **Retry sending** on the message page.
+### Option A — Resend (default)
 
-To use a different provider, add a branch in `src/lib/email.ts` (`sendViaResend`
-is the template) and set `EMAIL_PROVIDER` accordingly.
+1. Create an API key at <https://resend.com/api-keys> and verify your domain.
+2. Set env vars:
+   ```
+   EMAIL_PROVIDER=resend
+   EMAIL_FROM="Your List <list@yourdomain.com>"
+   RESEND_API_KEY=re_xxx
+   ```
 
-Until a provider is set, `isEmailConfigured()` is `false`: subscribe requests and
-messages are still recorded, and an admin can confirm subscribers manually from
-the list page. The confirmation/opt-in emails themselves also require a provider.
+### Option B — any SMTP server (Brevo, Amazon SES, Mailgun, Postmark, …)
+
+```
+EMAIL_PROVIDER=smtp
+EMAIL_FROM="Your List <list@yourdomain.com>"
+SMTP_HOST=smtp-relay.brevo.com   # provider's SMTP host
+SMTP_PORT=587                    # 465 = implicit TLS, 587 = STARTTLS
+SMTP_SECURE=false                # true for port 465
+SMTP_USER=...
+SMTP_PASS=...
+```
+
+New sends deliver immediately; already-queued messages drain on the next cron
+run or via **Retry sending** on the message page. Until a provider is set,
+`isEmailConfigured()` is `false`: subscribe requests and messages are still
+recorded (queued), and an admin can confirm subscribers manually from the list
+page.
+
+To add another API-based provider, add a `case` in `sendEmail()` and a
+`sendViaX()` function (`sendViaResend` is the template).
+
+### Auth emails (login codes)
+
+Login uses Supabase's built-in auth email, which is rate-limited. To lift the
+limit and send from your own domain, point Supabase at the same provider under
+**Authentication → Settings → SMTP Settings**. For Resend:
+
+```
+Host:     smtp.resend.com
+Port:     465
+Username: resend
+Password: <your Resend API key>
+Sender:   noreply@yourdomain.com   (on your verified domain)
+```
+
+Also edit **Authentication → Email Templates → Magic Link** and **Confirm
+signup** to include `{{ .Token }}` so the email shows a 6-digit code.
 
 ### Cron frequency
 
