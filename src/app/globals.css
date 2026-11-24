@@ -10,6 +10,12 @@ body {
   @apply bg-[#2d3139] text-slate-100 antialiased;
 }
 
+/* Highlight a post when linked via its #m-<id> permalink. */
+[id^="m-"]:target {
+  border-color: #4a90d2;
+  box-shadow: 0 0 0 1px #4a90d2;
+}
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2d3139] disabled:opacity-50 disabled:pointer-events-none;

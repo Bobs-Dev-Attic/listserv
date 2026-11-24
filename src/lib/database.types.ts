@@ -74,6 +74,7 @@ export interface Message {
   reply_to_message_id: string | null;
   recipient_count: number;
   digested: boolean;
+  seq: number | null;
   created_at: string;
   queued_at: string | null;
   sent_at: string | null;
