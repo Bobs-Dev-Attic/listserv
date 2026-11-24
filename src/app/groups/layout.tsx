@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { displayName } from "@/lib/display";
+import { Avatar } from "@/components/avatar";
 import { signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,14 @@ export default async function GroupsLayout({
                 Admin
               </Link>
             )}
-            <span className="hidden text-blue-100 sm:inline">{name}</span>
+            <Link
+              href="/account"
+              className="flex items-center gap-2 text-blue-100 hover:text-white"
+              title="Account"
+            >
+              <Avatar url={profile.avatar_url} name={name} size={28} />
+              <span className="hidden sm:inline">{name}</span>
+            </Link>
             <form action={signOutAction}>
               <button
                 type="submit"
