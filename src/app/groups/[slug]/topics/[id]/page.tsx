@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { List, Message, DeliveryMode } from "@/lib/database.types";
 import { displayName, initials, avatarColor, timeAgo } from "@/lib/display";
 import { GroupSidebar } from "@/components/group-sidebar";
+import { CopyLinkButton } from "@/components/copy-link-button";
 import { ReplyForm } from "./reply-form";
 
 export const dynamic = "force-dynamic";
@@ -30,30 +31,18 @@ function PostCard({ post, permalink }: { post: Post; permalink: string }) {
           </span>
           <div className="font-medium text-white">{author}</div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+        <div className="flex shrink-0 items-center gap-3 text-xs text-slate-400">
           <span>{timeAgo(post.created_at)}</span>
           {post.seq != null && (
             <a
               href={permalink}
-              className="flex items-center gap-1 text-slate-500 hover:text-[#5b9bd5]"
+              className="text-slate-500 hover:text-[#5b9bd5]"
               title="Permalink to this message"
             >
-              <span>#{post.seq}</span>
-              <svg
-                className="h-3.5 w-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
+              #{post.seq}
             </a>
           )}
+          <CopyLinkButton path={permalink} />
         </div>
       </div>
       <div className="mt-3 whitespace-pre-wrap text-sm text-slate-200">
