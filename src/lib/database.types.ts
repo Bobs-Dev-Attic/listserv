@@ -9,6 +9,7 @@ export type SubscriptionStatus =
   | "unsubscribed"
   | "bounced";
 export type SubscriptionRole = "subscriber" | "moderator";
+export type DeliveryMode = "each" | "digest" | "none";
 export type MessageKind = "broadcast" | "post";
 export type MessageStatus =
   | "draft"
@@ -53,6 +54,7 @@ export interface Subscription {
   profile_id: string | null;
   status: SubscriptionStatus;
   role: SubscriptionRole;
+  delivery_mode: DeliveryMode;
   confirm_token: string;
   unsubscribe_token: string;
   subscribed_at: string;
@@ -71,6 +73,7 @@ export interface Message {
   sender_profile_id: string | null;
   reply_to_message_id: string | null;
   recipient_count: number;
+  digested: boolean;
   created_at: string;
   queued_at: string | null;
   sent_at: string | null;

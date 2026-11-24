@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { leaveGroupAction } from "@/app/groups/actions";
+import { DeliveryModeSelect } from "@/components/delivery-mode-select";
+import type { DeliveryMode } from "@/lib/database.types";
 
 type Active = "messages" | "new" | "about";
 
@@ -9,12 +11,14 @@ export function GroupSidebar({
   name,
   canPost,
   active,
+  deliveryMode,
 }: {
   slug: string;
   listId: string;
   name: string;
   canPost: boolean;
   active: Active;
+  deliveryMode?: DeliveryMode;
 }) {
   return (
     <aside className="md:w-56 md:shrink-0">
@@ -45,6 +49,11 @@ export function GroupSidebar({
             />
           )}
         </nav>
+        {deliveryMode && (
+          <div className="border-t border-white/10 py-1">
+            <DeliveryModeSelect listId={listId} slug={slug} mode={deliveryMode} />
+          </div>
+        )}
         <div className="border-t border-white/10 p-2">
           <Link
             href="/groups"

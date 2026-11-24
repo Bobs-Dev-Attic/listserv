@@ -80,6 +80,21 @@ export async function joinGroupAction(formData: FormData) {
   redirect("/groups");
 }
 
+/** Member sets their own delivery preference for a list. */
+export async function setDeliveryModeAction(formData: FormData) {
+  const { supabase, user } = await requireSessionUser();
+  const listId = String(formData.get("list_id") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const mode = String(formData.get("mode") ?? "");
+  if (!["each", "digest", "none"].includes(mode)) return;
+  await supabase
+    .from("subscriptions")
+    .update({ delivery_mode: mode })
+    .eq("list_id", listId)
+    .eq("profile_id", user.id);
+  if (slug) revalidatePath(`/groups/${slug}`);
+}
+
 /** Member leaves a list. */
 export async function leaveGroupAction(formData: FormData) {
   const { supabase, user } = await requireSessionUser();
