@@ -28,7 +28,12 @@ export default async function DashboardLayout({
           </>
         }
       >
-        <span className="hidden text-slate-300 sm:inline">{profile.email}</span>
+        <Link
+          href="/account"
+          className="hidden text-slate-300 hover:text-white sm:inline"
+        >
+          {profile.email}
+        </Link>
         <Link href="/" className="text-slate-200 hover:text-white">
           View site
         </Link>
