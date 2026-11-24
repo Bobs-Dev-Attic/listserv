@@ -26,6 +26,7 @@ export default async function UsersPage() {
       full_name: p.full_name,
       avatar_url: p.avatar_url,
       role: p.role,
+      status: p.status,
       created_at: p.created_at,
     }),
   );

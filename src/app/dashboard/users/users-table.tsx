@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { displayName } from "@/lib/display";
-import { setUserRoleAction } from "../actions";
+import { setUserRoleAction, setUserStatusAction } from "../actions";
 import { savePrefsAction } from "./prefs";
 
 export interface UserRow {
@@ -12,25 +12,33 @@ export interface UserRow {
   full_name: string | null;
   avatar_url: string | null;
   role: string;
+  status: string;
   created_at: string;
 }
 
-type ColKey = "user" | "email" | "role" | "joined" | "actions";
+type ColKey = "user" | "email" | "role" | "status" | "joined" | "actions";
 interface Column {
   key: ColKey;
   label: string;
-  type: "text" | "role" | "date" | "actions";
+  type: "text" | "role" | "status" | "date" | "actions";
   width: number;
   menu: boolean;
 }
 
 const COLUMNS: Column[] = [
   { key: "user", label: "User", type: "text", width: 240, menu: true },
-  { key: "email", label: "Email", type: "text", width: 260, menu: true },
-  { key: "role", label: "Role", type: "role", width: 130, menu: true },
-  { key: "joined", label: "Joined", type: "date", width: 150, menu: true },
-  { key: "actions", label: "", type: "actions", width: 120, menu: false },
+  { key: "email", label: "Email", type: "text", width: 240, menu: true },
+  { key: "role", label: "Role", type: "role", width: 120, menu: true },
+  { key: "status", label: "Status", type: "status", width: 120, menu: true },
+  { key: "joined", label: "Joined", type: "date", width: 140, menu: true },
+  { key: "actions", label: "", type: "actions", width: 170, menu: false },
 ];
+
+const STATUS_BADGE: Record<string, string> = {
+  active: "bg-emerald-500/15 text-emerald-300",
+  pending: "bg-amber-500/15 text-amber-300",
+  blocked: "bg-rose-500/15 text-rose-300",
+};
 
 export interface TablePrefs {
   widths?: Partial<Record<ColKey, number>>;
@@ -110,6 +118,8 @@ export function UsersTable({
     if (fe && !u.email.toLowerCase().includes(fe)) return false;
     const fr = filters.role ?? "";
     if (fr && u.role !== fr) return false;
+    const fs = filters.status ?? "";
+    if (fs && u.status !== fs) return false;
     return true;
   });
   if (sort) {
@@ -126,6 +136,9 @@ export function UsersTable({
       } else if (sort.key === "role") {
         av = a.role;
         bv = b.role;
+      } else if (sort.key === "status") {
+        av = a.status;
+        bv = b.status;
       } else if (sort.key === "joined") {
         av = a.created_at;
         bv = b.created_at;
@@ -263,31 +276,68 @@ export function UsersTable({
                         {u.role}
                       </span>
                     </td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`badge ${STATUS_BADGE[u.status] ?? "bg-white/10 text-slate-300"}`}
+                      >
+                        {u.status}
+                      </span>
+                    </td>
                     <td className="px-4 py-2 text-slate-400">
                       {new Date(u.created_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-2">
-                      <div className="flex justify-end">
-                        {u.id === currentUserId ? (
+                      {u.id === currentUserId ? (
+                        <div className="flex justify-end">
                           <span className="text-xs text-slate-500">You</span>
-                        ) : u.role === "admin" ? (
-                          <form action={setUserRoleAction}>
-                            <input type="hidden" name="id" value={u.id} />
-                            <input type="hidden" name="role" value="member" />
-                            <button className="text-xs font-medium text-slate-300 hover:underline">
-                              Make member
-                            </button>
-                          </form>
-                        ) : (
-                          <form action={setUserRoleAction}>
-                            <input type="hidden" name="id" value={u.id} />
-                            <input type="hidden" name="role" value="admin" />
-                            <button className="text-xs font-medium text-[#5b9bd5] hover:underline">
-                              Make admin
-                            </button>
-                          </form>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap justify-end gap-x-3 gap-y-1">
+                          {u.role === "admin" ? (
+                            <form action={setUserRoleAction}>
+                              <input type="hidden" name="id" value={u.id} />
+                              <input type="hidden" name="role" value="member" />
+                              <button className="text-xs font-medium text-slate-300 hover:underline">
+                                Make member
+                              </button>
+                            </form>
+                          ) : (
+                            <form action={setUserRoleAction}>
+                              <input type="hidden" name="id" value={u.id} />
+                              <input type="hidden" name="role" value="admin" />
+                              <button className="text-xs font-medium text-[#5b9bd5] hover:underline">
+                                Make admin
+                              </button>
+                            </form>
+                          )}
+                          {u.status === "pending" && (
+                            <form action={setUserStatusAction}>
+                              <input type="hidden" name="id" value={u.id} />
+                              <input type="hidden" name="status" value="active" />
+                              <button className="text-xs font-medium text-emerald-300 hover:underline">
+                                Approve
+                              </button>
+                            </form>
+                          )}
+                          {u.status === "blocked" ? (
+                            <form action={setUserStatusAction}>
+                              <input type="hidden" name="id" value={u.id} />
+                              <input type="hidden" name="status" value="active" />
+                              <button className="text-xs font-medium text-emerald-300 hover:underline">
+                                Unblock
+                              </button>
+                            </form>
+                          ) : (
+                            <form action={setUserStatusAction}>
+                              <input type="hidden" name="id" value={u.id} />
+                              <input type="hidden" name="status" value="blocked" />
+                              <button className="text-xs font-medium text-rose-300 hover:underline">
+                                Block
+                              </button>
+                            </form>
+                          )}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -340,9 +390,12 @@ function ColumnMenu({
             <div className="mb-1 px-1 uppercase tracking-wide text-slate-500">
               Filter
             </div>
-            {column.type === "role" ? (
+            {column.type === "role" || column.type === "status" ? (
               <div className="flex gap-1">
-                {["", "admin", "member"].map((v) => (
+                {(column.type === "role"
+                  ? ["", "admin", "member"]
+                  : ["", "active", "pending", "blocked"]
+                ).map((v) => (
                   <button
                     key={v || "all"}
                     type="button"

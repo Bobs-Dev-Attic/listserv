@@ -8,6 +8,7 @@ import { Markdown } from "@/components/markdown";
 import { GroupSidebar } from "@/components/group-sidebar";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { ReplyForm } from "./reply-form";
+import { DeletePostButton } from "./delete-post-button";
 
 export const dynamic = "force-dynamic";
 
@@ -27,11 +28,17 @@ function PostCard({
   permalink,
   name,
   avatarUrl,
+  slug,
+  isRoot,
+  canModerate,
 }: {
   post: Post;
   permalink: string;
   name: string;
   avatarUrl: string | null;
+  slug: string;
+  isRoot: boolean;
+  canModerate: boolean;
 }) {
   return (
     <div
@@ -55,6 +62,13 @@ function PostCard({
             </a>
           )}
           <CopyLinkButton path={permalink} />
+          {canModerate && (
+            <DeletePostButton
+              messageId={post.id}
+              slug={slug}
+              isRoot={isRoot}
+            />
+          )}
         </div>
       </div>
       <div className="mt-3">
@@ -145,6 +159,12 @@ export default async function TopicPage({
     };
   };
 
+  const { data: modData } = await supabase.rpc("user_has_permission", {
+    p_perm: "moderate_topics",
+    p_list: list.id,
+  });
+  const canModerate = modData === true;
+
   const base = `/groups/${slug}/topics/${root.id}`;
 
   const canPost =
@@ -190,6 +210,9 @@ export default async function TopicPage({
                   permalink={`${base}#m-${root.id}`}
                   name={a.name}
                   avatarUrl={a.avatarUrl}
+                  slug={slug}
+                  isRoot
+                  canModerate={canModerate}
                 />
               );
             })()}
@@ -202,6 +225,9 @@ export default async function TopicPage({
                   permalink={`${base}#m-${r.id}`}
                   name={a.name}
                   avatarUrl={a.avatarUrl}
+                  slug={slug}
+                  isRoot={false}
+                  canModerate={canModerate}
                 />
               );
             })}

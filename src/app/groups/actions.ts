@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { processMessage } from "@/lib/send-worker";
+import { logAudit } from "@/lib/audit";
 import type { List, Message } from "@/lib/database.types";
 
 export interface PostState {
@@ -192,4 +193,52 @@ export async function replyAction(
   await fanOut((data as { id: string }).id);
   revalidatePath(`/groups/${slug}/topics/${topicId}`);
   return { error: null };
+}
+
+/**
+ * Delete a post (and, if it's a topic root, its replies). Authorized by RLS:
+ * the "messages: moderator delete" policy only permits the delete when the
+ * caller has the `moderate_topics` permission on the message's list (or is an
+ * admin). Non-moderators simply delete zero rows.
+ */
+export async function deletePostAction(formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const messageId = String(formData.get("message_id") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const isRoot = formData.get("is_root") === "1";
+  if (!messageId) return;
+
+  if (isRoot) {
+    // Remove the topic and its direct replies.
+    await supabase
+      .from("messages")
+      .delete()
+      .or(`id.eq.${messageId},reply_to_message_id.eq.${messageId}`);
+    await logAudit({
+      action: "post.delete",
+      actorId: user.id,
+      actorEmail: user.email ?? null,
+      targetType: "message",
+      targetId: messageId,
+      summary: "Deleted a topic (moderation)",
+    });
+    revalidatePath(`/groups/${slug}`);
+    redirect(`/groups/${slug}`);
+  }
+
+  await supabase.from("messages").delete().eq("id", messageId);
+  await logAudit({
+    action: "post.delete",
+    actorId: user.id,
+    actorEmail: user.email ?? null,
+    targetType: "message",
+    targetId: messageId,
+    summary: "Deleted a reply (moderation)",
+  });
+  revalidatePath(`/groups/${slug}`);
 }
