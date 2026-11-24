@@ -55,15 +55,15 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
     }
     setEmail(addr);
     setStep("code");
-    setInfo(`We emailed a 6-digit code to ${addr}. It expires in 1 hour.`);
+    setInfo(`We emailed a code to ${addr}. It expires in 1 hour.`);
   }
 
   async function verifyCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const token = code.trim();
-    if (!/^\d{6}$/.test(token)) {
-      setError("Enter the 6-digit code from your email.");
+    if (!/^\d{6,10}$/.test(token)) {
+      setError("Enter the numeric code from your email.");
       return;
     }
     setLoading(true);
@@ -129,21 +129,21 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
         )}
         <div>
           <label htmlFor="code" className="label">
-            6-digit code
+            Verification code
           </label>
           <input
             id="code"
             name="code"
             inputMode="numeric"
             autoComplete="one-time-code"
-            pattern="\d{6}"
-            maxLength={6}
+            pattern="\d{6,10}"
+            maxLength={10}
             required
             autoFocus
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            placeholder="123456"
-            className="input text-center text-lg tracking-[0.5em]"
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 10))}
+            placeholder="Enter the code"
+            className="input text-center text-lg tracking-[0.3em]"
           />
         </div>
         {error && (
