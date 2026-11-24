@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { List } from "@/lib/database.types";
+import { GroupSidebar } from "@/components/group-sidebar";
 import { NewTopicForm } from "./new-topic-form";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,6 @@ export default async function NewTopicPage({
   const list = listRow as List | null;
   if (!list) notFound();
 
-  // Must be a confirmed member and the group must allow member posting.
   const { data: membership } = await supabase
     .from("subscriptions")
     .select("status")
@@ -39,18 +39,31 @@ export default async function NewTopicPage({
   if (!canPost) redirect(`/groups/${slug}`);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <div>
-        <Link
-          href={`/groups/${slug}`}
-          className="text-sm text-gray-500 hover:text-gray-900"
-        >
-          ← {list.name}
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">New topic</h1>
-      </div>
-      <div className="card p-6">
-        <NewTopicForm slug={slug} />
+    <div className="grid gap-6 md:grid-cols-[14rem_1fr]">
+      <GroupSidebar
+        slug={slug}
+        listId={list.id}
+        name={list.name}
+        canPost={canPost}
+        active="new"
+      />
+
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
+          <Link href="/groups" className="hover:text-slate-900">
+            Groups
+          </Link>
+          <span>/</span>
+          <Link href={`/groups/${slug}`} className="hover:text-slate-900">
+            {list.name}
+          </Link>
+          <span>/</span>
+          <span>New topic</span>
+        </div>
+        <h1 className="mb-4 text-2xl font-bold text-slate-900">New topic</h1>
+        <div className="rounded-lg border border-slate-200 bg-white p-6">
+          <NewTopicForm slug={slug} />
+        </div>
       </div>
     </div>
   );
