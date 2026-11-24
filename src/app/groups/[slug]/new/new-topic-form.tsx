@@ -40,6 +40,7 @@ export function NewTopicForm({ slug }: { slug: string }) {
           className={inputCls}
         />
         <p className="mt-1 text-xs text-slate-500">
+          Markdown supported — **bold**, _italic_, lists, [links](url). Emoji too 🎉.
           This is emailed to the group and posted here.
         </p>
       </div>

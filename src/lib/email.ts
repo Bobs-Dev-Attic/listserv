@@ -1,19 +1,18 @@
 /**
  * Multi-provider email sending.
  *
- * Config is namespaced under LISTSERV_ so it never collides with the many
- * SUPABASE_ / POSTGRES_ vars the integration adds. Pick a provider with
- * LISTSERV_EMAIL_PROVIDER (default "resend"):
- *   - "resend" : Resend HTTP API      (LISTSERV_RESEND_API_KEY)
- *   - "smtp"   : any SMTP server      (LISTSERV_SMTP_HOST/PORT/USER/PASS) —
- *                works with Brevo, Amazon SES, Mailgun, Postmark, etc.
+ * Resolution order for the SMTP transport:
+ *   1. The active server in the email_servers table (admin-managed, if any).
+ *   2. Env config: LISTSERV_EMAIL_PROVIDER = "resend" (HTTP API) or "smtp".
  *
- * LISTSERV_EMAIL_FROM is required for every provider, e.g.
- * "My List <list@domain.com>".
+ * LISTSERV_EMAIL_FROM is required for the env path; the DB server carries its
+ * own from_email.
  *
- * If the chosen provider isn't configured, isEmailConfigured() is false and the
- * send worker leaves deliveries queued (nothing is lost).
+ * If nothing is configured, isEmailConfigured() is false and the send worker
+ * leaves deliveries queued.
  */
+
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type EmailProvider = "resend" | "smtp";
 
@@ -28,6 +27,15 @@ export interface OutgoingEmail {
 
 export interface SendResult {
   providerMessageId: string | null;
+}
+
+interface SmtpConfig {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+  from: string;
 }
 
 const env = {
@@ -46,32 +54,76 @@ export function emailProvider(): EmailProvider {
   return p === "smtp" ? "smtp" : "resend";
 }
 
-export function isEmailConfigured(): boolean {
-  if (!env.from()) return false;
-  switch (emailProvider()) {
-    case "resend":
-      return Boolean(env.resendKey());
-    case "smtp":
-      return Boolean(env.smtpHost() && env.smtpUser() && env.smtpPass());
-    default:
-      return false;
+/** The admin-configured active SMTP server, if one exists. */
+async function activeServer(): Promise<SmtpConfig | null> {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("email_servers")
+      .select("host, port, secure, username, password, from_email")
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+    if (!data) return null;
+    const s = data as {
+      host: string;
+      port: number;
+      secure: boolean;
+      username: string;
+      password: string;
+      from_email: string;
+    };
+    return {
+      host: s.host,
+      port: s.port,
+      secure: s.secure,
+      user: s.username,
+      pass: s.password,
+      from: s.from_email,
+    };
+  } catch {
+    return null;
   }
 }
 
+function envSmtp(): SmtpConfig | null {
+  const host = env.smtpHost();
+  const user = env.smtpUser();
+  const pass = env.smtpPass();
+  const from = env.from();
+  if (!host || !user || !pass || !from) return null;
+  const port = Number(env.smtpPort() ?? "587");
+  const secure =
+    (env.smtpSecure() ?? (port === 465 ? "true" : "false")) === "true";
+  return { host, port, secure, user, pass, from };
+}
+
+export async function isEmailConfigured(): Promise<boolean> {
+  if (await activeServer()) return true;
+  if (emailProvider() === "resend") {
+    return Boolean(env.resendKey() && env.from());
+  }
+  return envSmtp() != null;
+}
+
 export async function sendEmail(msg: OutgoingEmail): Promise<SendResult> {
-  if (!isEmailConfigured()) {
+  const server = (await activeServer()) ?? null;
+  if (server) return sendViaSmtp(server, msg);
+
+  if (emailProvider() === "resend") {
+    if (!env.resendKey() || !env.from()) {
+      throw new Error("Resend not configured (LISTSERV_RESEND_API_KEY / LISTSERV_EMAIL_FROM).");
+    }
+    return sendViaResend(msg);
+  }
+
+  const cfg = envSmtp();
+  if (!cfg) {
     throw new Error(
-      "No email provider configured. Set LISTSERV_EMAIL_FROM and the keys for " +
-        "your LISTSERV_EMAIL_PROVIDER (LISTSERV_RESEND_API_KEY, or " +
-        "LISTSERV_SMTP_HOST/USER/PASS).",
+      "No email server configured. Add one in the SMTP settings, or set the LISTSERV_SMTP_* / RESEND env vars.",
     );
   }
-  switch (emailProvider()) {
-    case "resend":
-      return sendViaResend(msg);
-    case "smtp":
-      return sendViaSmtp(msg);
-  }
+  return sendViaSmtp(cfg, msg);
 }
 
 // --------------------------- Resend (HTTP API) ---------------------------
@@ -93,7 +145,6 @@ async function sendViaResend(msg: OutgoingEmail): Promise<SendResult> {
       headers: msg.headers,
     }),
   });
-
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Resend error ${res.status}: ${body}`);
@@ -104,32 +155,19 @@ async function sendViaResend(msg: OutgoingEmail): Promise<SendResult> {
 
 // --------------------------- Generic SMTP ---------------------------
 
-// Reuse a single transport across invocations in a warm serverless instance.
-let smtpTransport: import("nodemailer").Transporter | null = null;
-
-async function getSmtpTransport() {
-  if (smtpTransport) return smtpTransport;
+async function sendViaSmtp(
+  cfg: SmtpConfig,
+  msg: OutgoingEmail,
+): Promise<SendResult> {
   const nodemailer = (await import("nodemailer")).default;
-  const port = Number(env.smtpPort() ?? "587");
-  // secure=true for port 465 (implicit TLS); false uses STARTTLS on 587/25.
-  const secure =
-    (env.smtpSecure() ?? (port === 465 ? "true" : "false")) === "true";
-  smtpTransport = nodemailer.createTransport({
-    host: env.smtpHost(),
-    port,
-    secure,
-    auth: {
-      user: env.smtpUser(),
-      pass: env.smtpPass(),
-    },
+  const transport = nodemailer.createTransport({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.secure,
+    auth: { user: cfg.user, pass: cfg.pass },
   });
-  return smtpTransport;
-}
-
-async function sendViaSmtp(msg: OutgoingEmail): Promise<SendResult> {
-  const transport = await getSmtpTransport();
   const info = await transport.sendMail({
-    from: env.from(),
+    from: cfg.from,
     to: msg.to,
     subject: msg.subject,
     text: msg.text,

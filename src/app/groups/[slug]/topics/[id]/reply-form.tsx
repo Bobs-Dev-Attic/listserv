@@ -21,7 +21,7 @@ export function ReplyForm({ slug, topicId }: { slug: string; topicId: string }) 
         name="body_text"
         rows={4}
         required
-        placeholder="Write a reply…"
+        placeholder="Write a reply… (Markdown supported)"
         className="w-full rounded-md border border-white/15 bg-[#2d3139] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-[#4a90d2] focus:outline-none"
       />
       {state.error && (

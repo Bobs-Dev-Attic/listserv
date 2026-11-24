@@ -16,6 +16,28 @@ body {
   box-shadow: 0 0 0 1px #4a90d2;
 }
 
+/* Rendered Markdown (post/reply bodies). */
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p { margin: 0.5rem 0; line-height: 1.6; }
+.md h1, .md h2, .md h3 { margin: 0.9rem 0 0.4rem; font-weight: 600; line-height: 1.3; color: #fff; }
+.md h1 { font-size: 1.3rem; }
+.md h2 { font-size: 1.15rem; }
+.md h3 { font-size: 1.05rem; }
+.md a { color: #5b9bd5; text-decoration: underline; }
+.md ul, .md ol { margin: 0.5rem 0; padding-left: 1.4rem; }
+.md ul { list-style: disc; }
+.md ol { list-style: decimal; }
+.md li { margin: 0.2rem 0; }
+.md blockquote { margin: 0.6rem 0; border-left: 3px solid rgba(255,255,255,0.2); padding-left: 0.8rem; color: #cbd5e1; }
+.md code { background: rgba(0,0,0,0.3); border-radius: 0.25rem; padding: 0.1rem 0.3rem; font-size: 0.85em; }
+.md pre { background: rgba(0,0,0,0.35); border-radius: 0.4rem; padding: 0.75rem; overflow-x: auto; margin: 0.6rem 0; }
+.md pre code { background: none; padding: 0; }
+.md hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 0.9rem 0; }
+.md table { border-collapse: collapse; margin: 0.6rem 0; }
+.md th, .md td { border: 1px solid rgba(255,255,255,0.15); padding: 0.3rem 0.6rem; }
+.md img { max-width: 100%; border-radius: 0.4rem; }
+
 @layer components {
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2d3139] disabled:opacity-50 disabled:pointer-events-none;
