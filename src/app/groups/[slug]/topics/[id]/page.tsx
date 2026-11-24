@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { List, Message } from "@/lib/database.types";
 import { displayName, initials, avatarColor, timeAgo } from "@/lib/display";
+import { GroupSidebar } from "@/components/group-sidebar";
 import { ReplyForm } from "./reply-form";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ type Post = Pick<
 function PostCard({ post }: { post: Post }) {
   const author = displayName(post.sender_email);
   return (
-    <div className="card p-5">
+    <div className="rounded-lg border border-slate-200 bg-white p-5">
       <div className="flex items-center gap-3">
         <span
           className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-medium text-white"
@@ -24,11 +25,11 @@ function PostCard({ post }: { post: Post }) {
           {initials(author)}
         </span>
         <div>
-          <div className="font-medium text-gray-900">{author}</div>
-          <div className="text-xs text-gray-400">{timeAgo(post.created_at)}</div>
+          <div className="font-medium text-slate-900">{author}</div>
+          <div className="text-xs text-slate-400">{timeAgo(post.created_at)}</div>
         </div>
       </div>
-      <div className="mt-3 whitespace-pre-wrap text-sm text-gray-800">
+      <div className="mt-3 whitespace-pre-wrap text-sm text-slate-800">
         {post.body_text}
       </div>
     </div>
@@ -84,39 +85,53 @@ export default async function TopicPage({
     list.posting_policy === "subscribers";
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
-      <div>
-        <Link
-          href={`/groups/${slug}`}
-          className="text-sm text-gray-500 hover:text-gray-900"
-        >
-          ← {list.name}
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">{root.subject}</h1>
-        <p className="text-sm text-gray-400">
+    <div className="grid gap-6 md:grid-cols-[14rem_1fr]">
+      <GroupSidebar
+        slug={slug}
+        listId={list.id}
+        name={list.name}
+        canPost={canPost}
+        active="messages"
+      />
+
+      <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
+          <Link href="/groups" className="hover:text-slate-900">
+            Groups
+          </Link>
+          <span>/</span>
+          <Link href={`/groups/${slug}`} className="hover:text-slate-900">
+            {list.name}
+          </Link>
+          <span>/</span>
+          <span className="truncate">Topic</span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-slate-900">{root.subject}</h1>
+        <p className="mb-4 text-sm text-slate-400">
           {replies.length} {replies.length === 1 ? "reply" : "replies"}
         </p>
-      </div>
 
-      <div className="space-y-3">
-        <PostCard post={root} />
-        {replies.map((r) => (
-          <PostCard key={r.id} post={r} />
-        ))}
-      </div>
-
-      {canPost ? (
-        <div className="card p-5">
-          <h2 className="mb-3 text-sm font-semibold text-gray-700">
-            Reply to this topic
-          </h2>
-          <ReplyForm slug={slug} topicId={root.id} />
+        <div className="space-y-3">
+          <PostCard post={root} />
+          {replies.map((r) => (
+            <PostCard key={r.id} post={r} />
+          ))}
         </div>
-      ) : (
-        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Replies on this group are limited to admins.
-        </p>
-      )}
+
+        {canPost ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-slate-700">
+              Reply to this topic
+            </h2>
+            <ReplyForm slug={slug} topicId={root.id} />
+          </div>
+        ) : (
+          <p className="mt-4 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Replies on this group are limited to admins.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
