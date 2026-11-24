@@ -61,6 +61,30 @@ export async function setUserRoleAction(formData: FormData) {
   revalidatePath("/dashboard/users");
 }
 
+export async function setUserStatusAction(formData: FormData) {
+  const { supabase, profile } = await requireAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const status = String(formData.get("status") ?? "");
+  if (!["active", "pending", "blocked"].includes(status)) return;
+  // Never let an admin block/suspend their own account.
+  if (id === profile.id && status !== "active") return;
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+  await supabase.from("profiles").update({ status }).eq("id", id);
+  await logAudit({
+    action: status === "blocked" ? "user.block" : status === "active" ? "user.activate" : "user.pending",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "user",
+    targetId: id,
+    summary: `${status === "blocked" ? "Blocked" : status === "active" ? "Activated" : "Set pending"} ${(target as { email: string } | null)?.email ?? id}`,
+  });
+  revalidatePath("/dashboard/users");
+}
+
 // --------------------------- smtp / email ---------------------------
 
 export interface TestEmailState {

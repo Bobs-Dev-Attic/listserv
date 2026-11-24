@@ -24,6 +24,7 @@ export type DeliveryStatus =
   | "failed"
   | "skipped";
 export type UserRole = "admin" | "member";
+export type UserStatus = "active" | "pending" | "blocked";
 
 export interface Profile {
   id: string;
@@ -31,6 +32,23 @@ export interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   role: UserRole;
+  status: UserStatus;
+  created_at: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+  created_at: string;
+}
+
+export interface RoleAssignment {
+  id: string;
+  role_id: string;
+  profile_id: string;
+  list_id: string | null;
   created_at: string;
 }
 
