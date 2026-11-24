@@ -19,6 +19,7 @@ type Row = Pick<
   | "reply_to_message_id"
   | "created_at"
   | "kind"
+  | "seq"
 >;
 
 export default async function GroupPage({
@@ -98,7 +99,7 @@ export default async function GroupPage({
   const { data: msgRows } = await supabase
     .from("messages")
     .select(
-      "id, subject, body_text, sender_email, reply_to_message_id, created_at, kind",
+      "id, subject, body_text, sender_email, reply_to_message_id, created_at, kind, seq",
     )
     .eq("list_id", list.id)
     .order("created_at", { ascending: true });
@@ -295,6 +296,11 @@ export default async function GroupPage({
                         {t.root.kind === "broadcast" && (
                           <span className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-slate-400">
                             announcement
+                          </span>
+                        )}
+                        {t.root.seq != null && (
+                          <span className="ml-auto shrink-0 text-xs text-slate-500">
+                            #{t.root.seq}
                           </span>
                         )}
                       </div>
