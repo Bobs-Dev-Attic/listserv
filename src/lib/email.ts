@@ -1,12 +1,15 @@
 /**
  * Multi-provider email sending.
  *
- * Pick a provider with EMAIL_PROVIDER (default "resend"):
- *   - "resend" : Resend HTTP API      (RESEND_API_KEY)
- *   - "smtp"   : any SMTP server      (SMTP_HOST/PORT/USER/PASS) —
+ * Config is namespaced under LISTSERV_ so it never collides with the many
+ * SUPABASE_ / POSTGRES_ vars the integration adds. Pick a provider with
+ * LISTSERV_EMAIL_PROVIDER (default "resend"):
+ *   - "resend" : Resend HTTP API      (LISTSERV_RESEND_API_KEY)
+ *   - "smtp"   : any SMTP server      (LISTSERV_SMTP_HOST/PORT/USER/PASS) —
  *                works with Brevo, Amazon SES, Mailgun, Postmark, etc.
  *
- * EMAIL_FROM is required for every provider, e.g. "My List <list@domain.com>".
+ * LISTSERV_EMAIL_FROM is required for every provider, e.g.
+ * "My List <list@domain.com>".
  *
  * If the chosen provider isn't configured, isEmailConfigured() is false and the
  * send worker leaves deliveries queued (nothing is lost).
@@ -27,22 +30,29 @@ export interface SendResult {
   providerMessageId: string | null;
 }
 
+const env = {
+  provider: () => process.env.LISTSERV_EMAIL_PROVIDER,
+  from: () => process.env.LISTSERV_EMAIL_FROM,
+  resendKey: () => process.env.LISTSERV_RESEND_API_KEY,
+  smtpHost: () => process.env.LISTSERV_SMTP_HOST,
+  smtpPort: () => process.env.LISTSERV_SMTP_PORT,
+  smtpSecure: () => process.env.LISTSERV_SMTP_SECURE,
+  smtpUser: () => process.env.LISTSERV_SMTP_USER,
+  smtpPass: () => process.env.LISTSERV_SMTP_PASS,
+};
+
 export function emailProvider(): EmailProvider {
-  const p = (process.env.EMAIL_PROVIDER ?? "resend").toLowerCase();
+  const p = (env.provider() ?? "resend").toLowerCase();
   return p === "smtp" ? "smtp" : "resend";
 }
 
 export function isEmailConfigured(): boolean {
-  if (!process.env.EMAIL_FROM) return false;
+  if (!env.from()) return false;
   switch (emailProvider()) {
     case "resend":
-      return Boolean(process.env.RESEND_API_KEY);
+      return Boolean(env.resendKey());
     case "smtp":
-      return Boolean(
-        process.env.SMTP_HOST &&
-          process.env.SMTP_USER &&
-          process.env.SMTP_PASS,
-      );
+      return Boolean(env.smtpHost() && env.smtpUser() && env.smtpPass());
     default:
       return false;
   }
@@ -51,8 +61,9 @@ export function isEmailConfigured(): boolean {
 export async function sendEmail(msg: OutgoingEmail): Promise<SendResult> {
   if (!isEmailConfigured()) {
     throw new Error(
-      "No email provider configured. Set EMAIL_FROM and the keys for your " +
-        "EMAIL_PROVIDER (RESEND_API_KEY, or SMTP_HOST/USER/PASS).",
+      "No email provider configured. Set LISTSERV_EMAIL_FROM and the keys for " +
+        "your LISTSERV_EMAIL_PROVIDER (LISTSERV_RESEND_API_KEY, or " +
+        "LISTSERV_SMTP_HOST/USER/PASS).",
     );
   }
   switch (emailProvider()) {
@@ -69,11 +80,11 @@ async function sendViaResend(msg: OutgoingEmail): Promise<SendResult> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${env.resendKey()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM,
+      from: env.from(),
       to: msg.to,
       subject: msg.subject,
       text: msg.text,
@@ -99,17 +110,17 @@ let smtpTransport: import("nodemailer").Transporter | null = null;
 async function getSmtpTransport() {
   if (smtpTransport) return smtpTransport;
   const nodemailer = (await import("nodemailer")).default;
-  const port = Number(process.env.SMTP_PORT ?? "587");
+  const port = Number(env.smtpPort() ?? "587");
   // secure=true for port 465 (implicit TLS); false uses STARTTLS on 587/25.
   const secure =
-    (process.env.SMTP_SECURE ?? (port === 465 ? "true" : "false")) === "true";
+    (env.smtpSecure() ?? (port === 465 ? "true" : "false")) === "true";
   smtpTransport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
+    host: env.smtpHost(),
     port,
     secure,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: env.smtpUser(),
+      pass: env.smtpPass(),
     },
   });
   return smtpTransport;
@@ -118,7 +129,7 @@ async function getSmtpTransport() {
 async function sendViaSmtp(msg: OutgoingEmail): Promise<SendResult> {
   const transport = await getSmtpTransport();
   const info = await transport.sendMail({
-    from: process.env.EMAIL_FROM,
+    from: env.from(),
     to: msg.to,
     subject: msg.subject,
     text: msg.text,

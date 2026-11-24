@@ -96,29 +96,32 @@ account, then head to **/dashboard**.
 ## Email delivery (list / broadcast emails)
 
 List emails are sent through a pluggable provider layer (`src/lib/email.ts`).
-Choose one with `EMAIL_PROVIDER`; every provider needs `EMAIL_FROM` set to an
-address on a **domain you've verified**.
+Config is namespaced under `LISTSERV_*`. Choose a provider with
+`LISTSERV_EMAIL_PROVIDER`; every provider needs `LISTSERV_EMAIL_FROM` set to a
+**verified sender**.
 
-### Option A — Resend (default)
+### Option A — Brevo (SMTP, no domain needed)
 
-1. Create an API key at <https://resend.com/api-keys> and verify your domain.
+1. Verify a sender email in Brevo (Senders) and generate an **SMTP key**.
 2. Set env vars:
    ```
-   EMAIL_PROVIDER=resend
-   EMAIL_FROM="Your List <list@yourdomain.com>"
-   RESEND_API_KEY=re_xxx
+   LISTSERV_EMAIL_PROVIDER=smtp
+   LISTSERV_EMAIL_FROM="Your List <you@gmail.com>"   # the verified sender
+   LISTSERV_SMTP_HOST=smtp-relay.brevo.com
+   LISTSERV_SMTP_PORT=587                            # 465 = implicit TLS, 587 = STARTTLS
+   LISTSERV_SMTP_SECURE=false                        # true for port 465
+   LISTSERV_SMTP_USER=<Brevo SMTP login>
+   LISTSERV_SMTP_PASS=<Brevo SMTP key>
    ```
+   Any SMTP provider works here (Amazon SES, Mailgun, Postmark, …) — just change
+   the host/port/credentials.
 
-### Option B — any SMTP server (Brevo, Amazon SES, Mailgun, Postmark, …)
+### Option B — Resend (HTTP API, needs a verified domain)
 
 ```
-EMAIL_PROVIDER=smtp
-EMAIL_FROM="Your List <list@yourdomain.com>"
-SMTP_HOST=smtp-relay.brevo.com   # provider's SMTP host
-SMTP_PORT=587                    # 465 = implicit TLS, 587 = STARTTLS
-SMTP_SECURE=false                # true for port 465
-SMTP_USER=...
-SMTP_PASS=...
+LISTSERV_EMAIL_PROVIDER=resend
+LISTSERV_EMAIL_FROM="Your List <list@yourdomain.com>"
+LISTSERV_RESEND_API_KEY=re_xxx
 ```
 
 New sends deliver immediately; already-queued messages drain on the next cron
