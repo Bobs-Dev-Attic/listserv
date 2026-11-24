@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getProfile } from "@/lib/auth";
 import { processMessage } from "@/lib/send-worker";
 import type { ListType, PostingPolicy } from "@/lib/database.types";
@@ -210,11 +211,15 @@ export async function createMessageAction(
 
 /** Queue a draft (fan out to confirmed subscribers) and attempt to send now. */
 export async function sendMessageAction(formData: FormData) {
-  const { supabase } = await requireAdminClient();
+  // Authorize: caller must be an admin.
+  await requireAdminClient();
   const id = String(formData.get("id") ?? "");
 
   // Fan out via the SECURITY DEFINER function (creates deliveries, status=queued).
-  const { error } = await supabase.rpc("enqueue_message", { p_message_id: id });
+  // Called with the service role — EXECUTE is revoked from anon/authenticated
+  // so it cannot be triggered directly through the public RPC endpoint.
+  const admin = createAdminClient();
+  const { error } = await admin.rpc("enqueue_message", { p_message_id: id });
   if (error) throw new Error(error.message);
 
   // Attempt immediate delivery (no-op if no provider configured yet).
