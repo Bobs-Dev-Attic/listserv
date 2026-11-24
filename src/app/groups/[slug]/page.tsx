@@ -8,6 +8,8 @@ import { claimSubscriptions, joinGroupAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
+const PER_PAGE = 20;
+
 type Row = Pick<
   Message,
   | "id"
@@ -21,10 +23,17 @@ type Row = Pick<
 
 export default async function GroupPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; page?: string }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+  const sort = sp.sort === "oldest" ? "oldest" : "recent";
+  const page = Math.max(1, Number.parseInt(sp.page ?? "1") || 1);
+
   await claimSubscriptions();
   const supabase = await createClient();
   const {
@@ -111,9 +120,41 @@ export default async function GroupPage({
       }
     }
   }
-  const sorted = Array.from(topics.values()).sort((a, b) =>
-    a.last < b.last ? 1 : -1,
+
+  let all = Array.from(topics.values());
+  if (q) {
+    const ql = q.toLowerCase();
+    all = all.filter(
+      (t) =>
+        t.root.subject.toLowerCase().includes(ql) ||
+        t.root.body_text.toLowerCase().includes(ql),
+    );
+  }
+  all.sort((a, b) =>
+    sort === "recent"
+      ? a.last < b.last
+        ? 1
+        : -1
+      : a.last > b.last
+        ? 1
+        : -1,
   );
+
+  const total = all.length;
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const curPage = Math.min(page, pages);
+  const start = (curPage - 1) * PER_PAGE;
+  const pageItems = all.slice(start, start + PER_PAGE);
+
+  const qs = (over: Record<string, string | number | undefined>) => {
+    const p = new URLSearchParams();
+    const merged = { q: q || undefined, sort, page: curPage, ...over };
+    if (merged.q) p.set("q", String(merged.q));
+    if (merged.sort && merged.sort !== "recent") p.set("sort", String(merged.sort));
+    if (merged.page && Number(merged.page) > 1) p.set("page", String(merged.page));
+    const s = p.toString();
+    return `/groups/${slug}${s ? `?${s}` : ""}`;
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
@@ -127,29 +168,83 @@ export default async function GroupPage({
       />
 
       <div className="min-w-0 flex-1 px-4 py-5 md:px-8">
-        {/* breadcrumb */}
-        <div className="mb-4 flex items-center gap-2 text-sm text-slate-400">
-          <Link href="/groups" className="hover:text-white">
-            Groups
-          </Link>
-          <span>/</span>
-          <span className="font-medium text-slate-200">{list.name}</span>
-          <span>/</span>
-          <span>Topics</span>
+        {/* breadcrumb + search */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Link href="/groups" className="hover:text-white">
+              Groups
+            </Link>
+            <span>/</span>
+            <span className="font-medium text-slate-200">{list.name}</span>
+            <span>/</span>
+            <span>Topics</span>
+          </div>
+          <form action={`/groups/${slug}`} method="get" className="flex">
+            {sort !== "recent" && <input type="hidden" name="sort" value={sort} />}
+            <input
+              type="search"
+              name="q"
+              defaultValue={q}
+              placeholder="Search topics…"
+              className="w-44 rounded-l-md border border-white/15 bg-[#2d3139] px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:border-[#4a90d2] focus:outline-none sm:w-64"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="rounded-r-md bg-[#4a90d2] px-3 text-white hover:bg-[#3b7bbf]"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </button>
+          </form>
         </div>
 
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-white">
-            Topics <span className="font-normal text-slate-500">· {sorted.length}</span>
-          </h1>
-          {canPost && (
+        {/* toolbar: new topic + sort + pagination */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {canPost && (
+              <Link
+                href={`/groups/${slug}/new`}
+                className="rounded bg-[#4a90d2] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#3b7bbf]"
+              >
+                New topic
+              </Link>
+            )}
+            {q && (
+              <Link
+                href={`/groups/${slug}`}
+                className="text-sm text-slate-400 hover:text-white"
+              >
+                Clear search
+              </Link>
+            )}
+          </div>
+          <div className="flex items-center gap-4 text-sm text-slate-400">
             <Link
-              href={`/groups/${slug}/new`}
-              className="rounded bg-[#4a90d2] px-4 py-2 text-sm font-medium text-white hover:bg-[#3b7bbf]"
+              href={qs({ sort: sort === "recent" ? "oldest" : "recent", page: 1 })}
+              className="hover:text-white"
+              title="Toggle sort order"
             >
-              New topic
+              Date {sort === "recent" ? "↓" : "↑"}
             </Link>
-          )}
+            <span>
+              {total === 0 ? "0" : `${start + 1}–${Math.min(start + PER_PAGE, total)}`} of {total}
+            </span>
+            <span className="flex items-center gap-1">
+              {curPage > 1 ? (
+                <Link href={qs({ page: curPage - 1 })} className="rounded px-1.5 hover:bg-white/10" aria-label="Previous page">‹</Link>
+              ) : (
+                <span className="px-1.5 text-slate-600">‹</span>
+              )}
+              {curPage < pages ? (
+                <Link href={qs({ page: curPage + 1 })} className="rounded px-1.5 hover:bg-white/10" aria-label="Next page">›</Link>
+              ) : (
+                <span className="px-1.5 text-slate-600">›</span>
+              )}
+            </span>
+          </div>
         </div>
 
         {!canPost && (
@@ -160,21 +255,27 @@ export default async function GroupPage({
         )}
 
         <div className="overflow-hidden rounded-lg border border-white/10">
-          {sorted.length === 0 ? (
+          {pageItems.length === 0 ? (
             <div className="p-10 text-center text-slate-400">
-              No topics yet.{" "}
-              {canPost && (
-                <Link
-                  href={`/groups/${slug}/new`}
-                  className="text-[#5b9bd5] hover:underline"
-                >
-                  Start the first one.
-                </Link>
+              {q ? (
+                <>No topics match “{q}”.</>
+              ) : (
+                <>
+                  No topics yet.{" "}
+                  {canPost && (
+                    <Link
+                      href={`/groups/${slug}/new`}
+                      className="text-[#5b9bd5] hover:underline"
+                    >
+                      Start the first one.
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           ) : (
             <ul className="divide-y divide-white/10">
-              {sorted.map((t) => {
+              {pageItems.map((t) => {
                 const author = displayName(t.root.sender_email);
                 return (
                   <li key={t.root.id}>
