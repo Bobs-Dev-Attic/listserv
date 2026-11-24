@@ -45,8 +45,8 @@ export default async function UnsubscribePage({
       <div className="card max-w-md p-8 text-center">
         {result.status === "done" ? (
           <>
-            <h1 className="text-xl font-semibold text-gray-900">Unsubscribed</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-xl font-semibold text-slate-100">Unsubscribed</h1>
+            <p className="mt-2 text-slate-300">
               You&apos;ve been removed from{" "}
               <strong>{result.list.name}</strong>. Sorry to see you go.
             </p>
@@ -56,10 +56,10 @@ export default async function UnsubscribePage({
           </>
         ) : (
           <>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-slate-100">
               Invalid link
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-slate-300">
               We couldn&apos;t process that unsubscribe request.
             </p>
             <Link href="/" className="btn-secondary mt-6">

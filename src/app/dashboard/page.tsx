@@ -34,7 +34,7 @@ export default async function DashboardHome() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
+        <h1 className="text-2xl font-bold text-slate-100">Overview</h1>
         <Link href="/dashboard/lists/new" className="btn-primary">
           New list
         </Link>
@@ -49,15 +49,15 @@ export default async function DashboardHome() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Your lists</h2>
+            <h2 className="font-semibold text-slate-100">Your lists</h2>
             <Link href="/dashboard/lists" className="text-sm text-brand-600">
               View all
             </Link>
           </div>
           {recentLists.length === 0 ? (
-            <p className="text-sm text-gray-500">No lists yet.</p>
+            <p className="text-sm text-slate-400">No lists yet.</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-white/10">
               {recentLists.map((l) => (
                 <li key={l.id} className="py-2">
                   <Link
@@ -65,7 +65,7 @@ export default async function DashboardHome() {
                     className="flex items-center justify-between text-sm hover:text-brand-600"
                   >
                     <span className="font-medium">{l.name}</span>
-                    <span className="text-gray-400">/{l.slug}</span>
+                    <span className="text-slate-500">/{l.slug}</span>
                   </Link>
                 </li>
               ))}
@@ -74,11 +74,11 @@ export default async function DashboardHome() {
         </section>
 
         <section className="card p-5">
-          <h2 className="mb-3 font-semibold text-gray-900">Recent messages</h2>
+          <h2 className="mb-3 font-semibold text-slate-100">Recent messages</h2>
           {recentMessages.length === 0 ? (
-            <p className="text-sm text-gray-500">No messages yet.</p>
+            <p className="text-sm text-slate-400">No messages yet.</p>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-white/10">
               {recentMessages.map((m) => (
                 <li key={m.id} className="py-2">
                   <Link
@@ -101,8 +101,8 @@ export default async function DashboardHome() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="card p-5">
-      <div className="text-3xl font-bold text-gray-900">{value}</div>
-      <div className="mt-1 text-sm text-gray-500">{label}</div>
+      <div className="text-3xl font-bold text-slate-100">{value}</div>
+      <div className="mt-1 text-sm text-slate-400">{label}</div>
     </div>
   );
 }

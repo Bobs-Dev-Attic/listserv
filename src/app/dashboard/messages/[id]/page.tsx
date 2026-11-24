@@ -57,12 +57,12 @@ export default async function MessagePage({
       <div>
         <Link
           href={`/dashboard/lists/${list.id}`}
-          className="text-sm text-gray-500 hover:text-gray-900"
+          className="text-sm text-slate-400 hover:text-white"
         >
           ← {list.name}
         </Link>
         <div className="mt-2 flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-slate-100">
             {message.subject}
           </h1>
           <StatusBadge status={message.status} />
@@ -80,7 +80,7 @@ export default async function MessagePage({
       )}
 
       <div className="card p-6">
-        <div className="whitespace-pre-wrap text-sm text-gray-800">
+        <div className="whitespace-pre-wrap text-sm text-slate-200">
           {message.body_text}
         </div>
       </div>
@@ -94,7 +94,7 @@ export default async function MessagePage({
 
       <div className="card flex items-center justify-between p-6">
         <div>
-          <div className="font-medium text-gray-900">
+          <div className="font-medium text-slate-100">
             {message.status === "sent"
               ? "This message has been sent."
               : message.status === "draft"
@@ -102,7 +102,7 @@ export default async function MessagePage({
                 : "Queued for delivery."}
           </div>
           {message.sent_at && (
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-slate-400">
               Sent {new Date(message.sent_at).toLocaleString()}
             </div>
           )}
@@ -127,8 +127,8 @@ export default async function MessagePage({
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="card p-4">
-      <div className="text-xl font-bold text-gray-900">{value}</div>
-      <div className="mt-1 text-xs text-gray-500">{label}</div>
+      <div className="text-xl font-bold text-slate-100">{value}</div>
+      <div className="mt-1 text-xs text-slate-400">{label}</div>
     </div>
   );
 }

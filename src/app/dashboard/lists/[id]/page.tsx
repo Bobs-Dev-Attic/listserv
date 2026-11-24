@@ -21,7 +21,7 @@ const deliveryLabel: Record<string, string> = {
 const subStatusStyles: Record<string, string> = {
   confirmed: "bg-green-100 text-green-800",
   pending: "bg-amber-100 text-amber-800",
-  unsubscribed: "bg-gray-100 text-gray-600",
+  unsubscribed: "bg-white/10 text-slate-300",
   bounced: "bg-red-100 text-red-800",
 };
 
@@ -65,12 +65,12 @@ export default async function ListDetailPage({
         <div>
           <Link
             href="/dashboard/lists"
-            className="text-sm text-gray-500 hover:text-gray-900"
+            className="text-sm text-slate-400 hover:text-white"
           >
             ← Lists
           </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">{list.name}</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="mt-2 text-2xl font-bold text-slate-100">{list.name}</h1>
+          <p className="mt-1 text-sm text-slate-400">
             {list.is_public ? (
               <a
                 href={`${siteUrl()}/lists/${list.slug}`}
@@ -109,17 +109,17 @@ export default async function ListDetailPage({
 
       {/* Subscribers */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Subscribers</h2>
+        <h2 className="text-lg font-semibold text-slate-100">Subscribers</h2>
         <div className="card p-5">
           <AddSubscribersForm listId={id} />
         </div>
 
         <div className="card overflow-hidden">
           {subscriptions.length === 0 ? (
-            <p className="p-6 text-sm text-gray-500">No subscribers yet.</p>
+            <p className="p-6 text-sm text-slate-400">No subscribers yet.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+              <thead className="bg-white/5 text-left text-xs uppercase tracking-wide text-slate-400">
                 <tr>
                   <th className="px-4 py-2 font-medium">Email</th>
                   <th className="px-4 py-2 font-medium">Status</th>
@@ -128,10 +128,10 @@ export default async function ListDetailPage({
                   <th className="px-4 py-2 text-right font-medium">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-white/10">
                 {subscriptions.map((s) => (
                   <tr key={s.id}>
-                    <td className="px-4 py-2 font-medium text-gray-900">
+                    <td className="px-4 py-2 font-medium text-slate-100">
                       {s.email}
                     </td>
                     <td className="px-4 py-2">
@@ -139,10 +139,10 @@ export default async function ListDetailPage({
                         {s.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2 text-gray-600">
+                    <td className="px-4 py-2 text-slate-300">
                       {deliveryLabel[s.delivery_mode] ?? s.delivery_mode}
                     </td>
-                    <td className="px-4 py-2 text-gray-500">
+                    <td className="px-4 py-2 text-slate-400">
                       {new Date(s.subscribed_at).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-2">
@@ -166,7 +166,7 @@ export default async function ListDetailPage({
                               name="status"
                               value="unsubscribed"
                             />
-                            <button className="text-xs font-medium text-gray-600 hover:underline">
+                            <button className="text-xs font-medium text-slate-300 hover:underline">
                               Unsubscribe
                             </button>
                           </form>
@@ -190,9 +190,9 @@ export default async function ListDetailPage({
 
       {/* Messages */}
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+        <h2 className="text-lg font-semibold text-slate-100">Messages</h2>
         {messages.length === 0 ? (
-          <div className="card p-6 text-sm text-gray-500">
+          <div className="card p-6 text-sm text-slate-400">
             No messages yet.{" "}
             <Link
               href={`/dashboard/lists/${id}/compose`}
@@ -202,18 +202,18 @@ export default async function ListDetailPage({
             </Link>
           </div>
         ) : (
-          <div className="card divide-y divide-gray-100">
+          <div className="card divide-y divide-white/10">
             {messages.map((m) => (
               <Link
                 key={m.id}
                 href={`/dashboard/messages/${m.id}`}
-                className="flex items-center justify-between px-5 py-3 hover:bg-gray-50"
+                className="flex items-center justify-between px-5 py-3 hover:bg-white/5"
               >
                 <div className="min-w-0">
-                  <div className="truncate font-medium text-gray-900">
+                  <div className="truncate font-medium text-slate-100">
                     {m.subject}
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-slate-400">
                     {new Date(m.created_at).toLocaleString()}
                     {m.status === "sent" &&
                       ` · ${m.recipient_count} recipients`}
@@ -232,8 +232,8 @@ export default async function ListDetailPage({
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="card p-5">
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="mt-1 text-sm text-gray-500">{label}</div>
+      <div className="text-2xl font-bold text-slate-100">{value}</div>
+      <div className="mt-1 text-sm text-slate-400">{label}</div>
     </div>
   );
 }
