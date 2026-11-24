@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { logLoginAction } from "./log-login";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -76,6 +77,11 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
     if (error) {
       setError(error.message);
       return;
+    }
+    try {
+      await logLoginAction("email code");
+    } catch {
+      /* logging must not block sign-in */
     }
     router.push(redirectTo);
     router.refresh();

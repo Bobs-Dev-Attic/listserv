@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site";
+import { logAudit } from "@/lib/audit";
 import type { List, Message, Delivery } from "@/lib/database.types";
 
 export interface SendSummary {
@@ -124,6 +125,17 @@ export async function processMessage(messageId: string): Promise<SendSummary> {
       .from("messages")
       .update({ status: "sent", sent_at: new Date().toISOString() })
       .eq("id", messageId);
+  }
+
+  if (attempted > 0) {
+    await logAudit({
+      action: "email.broadcast",
+      actorEmail: message.sender_email,
+      targetType: "message",
+      targetId: messageId,
+      summary: `Delivered "${message.subject}" — ${sent} sent, ${failed} failed`,
+      metadata: { sent, failed, attempted },
+    });
   }
 
   return { messageId, attempted, sent, failed, configured: true };

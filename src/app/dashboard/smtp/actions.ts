@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/auth";
+import { logAudit } from "@/lib/audit";
 
 async function adminClient() {
   const profile = await getProfile();
   if (!profile || profile.role !== "admin") throw new Error("Not authorized");
-  return createClient();
+  const supabase = await createClient();
+  return { supabase, profile };
 }
 
 export interface SaveServerState {
@@ -19,7 +21,7 @@ export async function saveServerAction(
   _prev: SaveServerState,
   formData: FormData,
 ): Promise<SaveServerState> {
-  const supabase = await adminClient();
+  const { supabase, profile } = await adminClient();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const host = String(formData.get("host") ?? "").trim();
@@ -57,12 +59,20 @@ export async function saveServerAction(
     if (error) return { ok: false, error: error.message };
   }
 
+  await logAudit({
+    action: "smtp.save",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "smtp",
+    targetId: id || null,
+    summary: `${id ? "Updated" : "Added"} SMTP server "${name}"`,
+  });
   revalidatePath("/dashboard/smtp");
   return { ok: true, error: null };
 }
 
 export async function setActiveServerAction(formData: FormData) {
-  const supabase = await adminClient();
+  const { supabase, profile } = await adminClient();
   const id = String(formData.get("id") ?? "");
   const activate = formData.get("activate") !== "false";
   // Clear the current active server, then activate the chosen one.
@@ -76,12 +86,28 @@ export async function setActiveServerAction(formData: FormData) {
       .update({ is_active: true })
       .eq("id", id);
   }
+  await logAudit({
+    action: "smtp.activate",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "smtp",
+    targetId: id || null,
+    summary: activate ? "Set active SMTP server" : "Disabled active SMTP server",
+  });
   revalidatePath("/dashboard/smtp");
 }
 
 export async function deleteServerAction(formData: FormData) {
-  const supabase = await adminClient();
+  const { supabase, profile } = await adminClient();
   const id = String(formData.get("id") ?? "");
   await supabase.from("email_servers").delete().eq("id", id);
+  await logAudit({
+    action: "smtp.delete",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "smtp",
+    targetId: id,
+    summary: "Deleted an SMTP server",
+  });
   revalidatePath("/dashboard/smtp");
 }

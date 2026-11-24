@@ -8,6 +8,7 @@ import { getProfile } from "@/lib/auth";
 import { processMessage } from "@/lib/send-worker";
 import { isEmailConfigured, sendEmail } from "@/lib/email";
 import { siteUrl } from "@/lib/site";
+import { logAudit } from "@/lib/audit";
 import type { ListType, PostingPolicy } from "@/lib/database.types";
 
 function slugify(input: string): string {
@@ -43,7 +44,20 @@ export async function setUserRoleAction(formData: FormData) {
   if (!["admin", "member"].includes(role)) return;
   // Don't let an admin demote themselves (avoid locking out the dashboard).
   if (id === profile.id && role !== "admin") return;
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
   await supabase.from("profiles").update({ role }).eq("id", id);
+  await logAudit({
+    action: "user.role_change",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "user",
+    targetId: id,
+    summary: `Set ${(target as { email: string } | null)?.email ?? id} to ${role}`,
+  });
   revalidatePath("/dashboard/users");
 }
 
@@ -58,7 +72,7 @@ export async function sendTestEmailAction(
   _prev: TestEmailState,
   formData: FormData,
 ): Promise<TestEmailState> {
-  await requireAdminClient();
+  const { profile } = await requireAdminClient();
   const to = String(formData.get("to") ?? "").trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
     return { error: "Enter a valid email address.", message: null };
@@ -74,6 +88,13 @@ export async function sendTestEmailAction(
       to,
       subject: "ListServ test email",
       text: "This is a test email from your ListServ admin dashboard. If you received it, outbound email is working.",
+    });
+    await logAudit({
+      action: "email.test",
+      actorId: profile.id,
+      actorEmail: profile.email,
+      targetType: "email",
+      summary: `Sent a test email to ${to}`,
     });
     return { error: null, message: `Test email sent to ${to}. (Check spam.)` };
   } catch (err) {
@@ -128,15 +149,24 @@ export async function createListAction(
     return { error: error.message };
   }
 
+  const newId = (data as { id: string }).id;
+  await logAudit({
+    action: "list.create",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "list",
+    targetId: newId,
+    summary: `Created list "${name}"`,
+  });
   revalidatePath("/dashboard/lists");
-  redirect(`/dashboard/lists/${(data as { id: string }).id}`);
+  redirect(`/dashboard/lists/${newId}`);
 }
 
 export async function updateListAction(
   _prev: ListFormState,
   formData: FormData,
 ): Promise<ListFormState> {
-  const { supabase } = await requireAdminClient();
+  const { supabase, profile } = await requireAdminClient();
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   if (!id || !name) return { error: "Missing fields." };
@@ -156,14 +186,35 @@ export async function updateListAction(
     .eq("id", id);
 
   if (error) return { error: error.message };
+  await logAudit({
+    action: "list.update",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "list",
+    targetId: id,
+    summary: `Updated list "${name}"`,
+  });
   revalidatePath(`/dashboard/lists/${id}`);
   return { error: null };
 }
 
 export async function deleteListAction(formData: FormData) {
-  const { supabase } = await requireAdminClient();
+  const { supabase, profile } = await requireAdminClient();
   const id = String(formData.get("id") ?? "");
+  const { data: listRow } = await supabase
+    .from("lists")
+    .select("name")
+    .eq("id", id)
+    .maybeSingle();
   await supabase.from("lists").delete().eq("id", id);
+  await logAudit({
+    action: "list.delete",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "list",
+    targetId: id,
+    summary: `Deleted list "${(listRow as { name: string } | null)?.name ?? id}"`,
+  });
   revalidatePath("/dashboard/lists");
   redirect("/dashboard/lists");
 }
@@ -179,7 +230,7 @@ export async function addSubscribersAction(
   _prev: AddSubscribersState,
   formData: FormData,
 ): Promise<AddSubscribersState> {
-  await requireAdminClient(); // authorize caller
+  const { profile } = await requireAdminClient(); // authorize caller
   const admin = createAdminClient();
 
   const listId = String(formData.get("list_id") ?? "");
@@ -299,6 +350,18 @@ export async function addSubscribersAction(
   if (already) parts.push(`${already} already subscribed`);
   if (failed) parts.push(`${failed} failed to send`);
 
+  if (sent + confirmed > 0) {
+    await logAudit({
+      action: "subscription.add",
+      actorId: profile.id,
+      actorEmail: profile.email,
+      targetType: "list",
+      targetId: listId,
+      summary: `Added ${sent + confirmed} subscriber(s) to "${listName}"`,
+      metadata: { sent, confirmed, already, failed },
+    });
+  }
+
   return {
     error: null,
     message: parts.length ? parts.join(" · ") : "Nothing to add.",
@@ -363,7 +426,7 @@ export async function createMessageAction(
 /** Queue a draft (fan out to confirmed subscribers) and attempt to send now. */
 export async function sendMessageAction(formData: FormData) {
   // Authorize: caller must be an admin.
-  await requireAdminClient();
+  const { profile } = await requireAdminClient();
   const id = String(formData.get("id") ?? "");
 
   // Fan out via the SECURITY DEFINER function (creates deliveries, status=queued).
@@ -372,6 +435,20 @@ export async function sendMessageAction(formData: FormData) {
   const admin = createAdminClient();
   const { error } = await admin.rpc("enqueue_message", { p_message_id: id });
   if (error) throw new Error(error.message);
+
+  const { data: msg } = await admin
+    .from("messages")
+    .select("subject, recipient_count")
+    .eq("id", id)
+    .maybeSingle();
+  await logAudit({
+    action: "message.send",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "message",
+    targetId: id,
+    summary: `Sent "${(msg as { subject: string } | null)?.subject ?? id}" to ${(msg as { recipient_count: number } | null)?.recipient_count ?? 0} recipients`,
+  });
 
   // Attempt immediate delivery (no-op if no provider configured yet).
   await processMessage(id);
