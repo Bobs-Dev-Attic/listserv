@@ -34,8 +34,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect the admin dashboard.
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  // Protect the admin dashboard and the member area.
+  const path = request.nextUrl.pathname;
+  if (!user && (path.startsWith("/dashboard") || path.startsWith("/groups"))) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", request.nextUrl.pathname);

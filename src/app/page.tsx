@@ -30,8 +30,8 @@ export default async function HomePage() {
           </Link>
           <nav className="flex items-center gap-3 text-sm">
             {user ? (
-              <Link href="/dashboard" className="btn-secondary">
-                Dashboard
+              <Link href="/groups" className="btn-secondary">
+                My groups
               </Link>
             ) : (
               <Link href="/login" className="btn-primary">

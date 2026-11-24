@@ -21,7 +21,7 @@ export default async function LoginPage({
           <p className="mt-1 text-sm text-gray-500">
             Enter your email and we&apos;ll send you a 6-digit code.
           </p>
-          <SignInForm redirectTo={redirect ?? "/dashboard"} />
+          <SignInForm redirectTo={redirect ?? "/groups"} />
         </div>
         <p className="mt-4 text-center text-xs text-gray-500">
           The first person to sign in becomes the admin.
