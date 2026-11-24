@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
-import { addSubscribersAction } from "../../actions";
+import { addSubscribersAction, type AddSubscribersState } from "../../actions";
 
-const initial = { error: null as string | null, added: 0 };
+const initial: AddSubscribersState = { error: null, message: null };
 
 export function AddSubscribersForm({ listId }: { listId: string }) {
   const [state, formAction, pending] = useActionState(
@@ -21,12 +21,20 @@ export function AddSubscribersForm({ listId }: { listId: string }) {
         placeholder="alice@example.com, bob@example.com&#10;One per line or comma-separated"
         className="input"
       />
+      <label className="flex items-center gap-2 text-sm text-gray-600">
+        <input
+          type="checkbox"
+          name="skip_confirmation"
+          className="h-4 w-4 rounded border-gray-300 text-brand-600"
+        />
+        Add as already confirmed (skip the confirmation email)
+      </label>
       <div className="flex items-center gap-3">
         <button type="submit" className="btn-primary" disabled={pending}>
           {pending ? "Adding…" : "Add subscribers"}
         </button>
         <span className="text-xs text-gray-500">
-          Added here are confirmed immediately (no opt-in email).
+          By default, each person gets a confirmation email and must opt in.
         </span>
       </div>
       {state.error && (
@@ -34,9 +42,9 @@ export function AddSubscribersForm({ listId }: { listId: string }) {
           {state.error}
         </p>
       )}
-      {!state.error && state.added > 0 && (
+      {!state.error && state.message && (
         <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-          Processed {state.added} address{state.added === 1 ? "" : "es"}.
+          {state.message}
         </p>
       )}
     </form>
