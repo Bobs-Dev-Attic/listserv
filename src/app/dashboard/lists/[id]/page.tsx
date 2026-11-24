@@ -12,6 +12,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
+const deliveryLabel: Record<string, string> = {
+  each: "Each message",
+  digest: "Digest",
+  none: "No email",
+};
+
 const subStatusStyles: Record<string, string> = {
   confirmed: "bg-green-100 text-green-800",
   pending: "bg-amber-100 text-amber-800",
@@ -117,6 +123,7 @@ export default async function ListDetailPage({
                 <tr>
                   <th className="px-4 py-2 font-medium">Email</th>
                   <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium">Delivery</th>
                   <th className="px-4 py-2 font-medium">Subscribed</th>
                   <th className="px-4 py-2 text-right font-medium">Actions</th>
                 </tr>
@@ -131,6 +138,9 @@ export default async function ListDetailPage({
                       <span className={`badge ${subStatusStyles[s.status]}`}>
                         {s.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-2 text-gray-600">
+                      {deliveryLabel[s.delivery_mode] ?? s.delivery_mode}
                     </td>
                     <td className="px-4 py-2 text-gray-500">
                       {new Date(s.subscribed_at).toLocaleDateString()}

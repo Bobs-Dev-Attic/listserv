@@ -41,12 +41,15 @@ export default async function GroupPage({
 
   const { data: membership } = await supabase
     .from("subscriptions")
-    .select("status")
+    .select("status, delivery_mode")
     .eq("list_id", list.id)
     .eq("profile_id", user!.id)
     .maybeSingle();
-  const isMember =
-    (membership as { status: string } | null)?.status === "confirmed";
+  const member = membership as {
+    status: string;
+    delivery_mode: import("@/lib/database.types").DeliveryMode;
+  } | null;
+  const isMember = member?.status === "confirmed";
 
   if (!isMember) {
     const joinable =
@@ -118,6 +121,7 @@ export default async function GroupPage({
         name={list.name}
         canPost={canPost}
         active="messages"
+        deliveryMode={member?.delivery_mode}
       />
 
       <div>
