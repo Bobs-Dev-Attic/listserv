@@ -17,16 +17,18 @@ function PostCard({ post }: { post: Post }) {
   const author = displayName(post.sender_email);
   return (
     <div className="rounded-lg border border-white/10 bg-[#343842] p-5">
-      <div className="flex items-center gap-3">
-        <span
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-medium text-white"
-          style={{ backgroundColor: avatarColor(author) }}
-        >
-          {initials(author)}
-        </span>
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-medium text-white"
+            style={{ backgroundColor: avatarColor(author) }}
+          >
+            {initials(author)}
+          </span>
           <div className="font-medium text-white">{author}</div>
-          <div className="text-xs text-slate-400">{timeAgo(post.created_at)}</div>
+        </div>
+        <div className="shrink-0 text-xs text-slate-400">
+          {timeAgo(post.created_at)}
         </div>
       </div>
       <div className="mt-3 whitespace-pre-wrap text-sm text-slate-200">
@@ -100,7 +102,7 @@ export default async function TopicPage({
       />
 
       <div className="min-w-0 flex-1 px-4 py-5 md:px-8">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="w-full">
           <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
             <Link href="/groups" className="hover:text-white">
               Groups
