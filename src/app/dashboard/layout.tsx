@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
+import { SideNav } from "@/components/side-nav";
 import { signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -14,20 +15,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen">
-      <SiteHeader
-        homeHref="/dashboard"
-        title="ListServ admin"
-        nav={
-          <>
-            <Link href="/dashboard" className="hover:text-white">
-              Overview
-            </Link>
-            <Link href="/dashboard/lists" className="hover:text-white">
-              Lists
-            </Link>
-          </>
-        }
-      >
+      <SiteHeader fullWidth homeHref="/dashboard" title="ListServ admin">
         <Link
           href="/account"
           className="hidden text-slate-300 hover:text-white sm:inline"
@@ -46,7 +34,19 @@ export default async function DashboardLayout({
           </button>
         </form>
       </SiteHeader>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+
+      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col md:flex-row">
+        <SideNav
+          heading="Admin"
+          items={[
+            { href: "/dashboard", label: "Overview", exact: true },
+            { href: "/dashboard/lists", label: "Lists" },
+            { href: "/dashboard/users", label: "Users" },
+            { href: "/dashboard/smtp", label: "SMTP" },
+          ]}
+        />
+        <main className="min-w-0 flex-1 px-4 py-8 md:px-8">{children}</main>
+      </div>
     </div>
   );
 }

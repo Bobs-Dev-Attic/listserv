@@ -34,6 +34,56 @@ export async function signOutAction() {
   redirect("/login");
 }
 
+// --------------------------- users ---------------------------
+
+export async function setUserRoleAction(formData: FormData) {
+  const { supabase, profile } = await requireAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const role = String(formData.get("role") ?? "");
+  if (!["admin", "member"].includes(role)) return;
+  // Don't let an admin demote themselves (avoid locking out the dashboard).
+  if (id === profile.id && role !== "admin") return;
+  await supabase.from("profiles").update({ role }).eq("id", id);
+  revalidatePath("/dashboard/users");
+}
+
+// --------------------------- smtp / email ---------------------------
+
+export interface TestEmailState {
+  error: string | null;
+  message: string | null;
+}
+
+export async function sendTestEmailAction(
+  _prev: TestEmailState,
+  formData: FormData,
+): Promise<TestEmailState> {
+  await requireAdminClient();
+  const to = String(formData.get("to") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+    return { error: "Enter a valid email address.", message: null };
+  }
+  if (!isEmailConfigured()) {
+    return {
+      error: "Email isn't configured — set the LISTSERV_EMAIL_* env vars first.",
+      message: null,
+    };
+  }
+  try {
+    await sendEmail({
+      to,
+      subject: "ListServ test email",
+      text: "This is a test email from your ListServ admin dashboard. If you received it, outbound email is working.",
+    });
+    return { error: null, message: `Test email sent to ${to}. (Check spam.)` };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Send failed.",
+      message: null,
+    };
+  }
+}
+
 // --------------------------- lists ---------------------------
 
 export interface ListFormState {

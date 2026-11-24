@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { List, Message, DeliveryMode } from "@/lib/database.types";
-import { displayName, initials, avatarColor, timeAgo } from "@/lib/display";
+import { displayName, timeAgo } from "@/lib/display";
+import { Avatar } from "@/components/avatar";
 import { GroupSidebar } from "@/components/group-sidebar";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { ReplyForm } from "./reply-form";
@@ -11,11 +12,26 @@ export const dynamic = "force-dynamic";
 
 type Post = Pick<
   Message,
-  "id" | "subject" | "body_text" | "sender_email" | "created_at" | "seq"
+  | "id"
+  | "subject"
+  | "body_text"
+  | "sender_email"
+  | "sender_profile_id"
+  | "created_at"
+  | "seq"
 >;
 
-function PostCard({ post, permalink }: { post: Post; permalink: string }) {
-  const author = displayName(post.sender_email);
+function PostCard({
+  post,
+  permalink,
+  name,
+  avatarUrl,
+}: {
+  post: Post;
+  permalink: string;
+  name: string;
+  avatarUrl: string | null;
+}) {
   return (
     <div
       id={`m-${post.id}`}
@@ -23,13 +39,8 @@ function PostCard({ post, permalink }: { post: Post; permalink: string }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-medium text-white"
-            style={{ backgroundColor: avatarColor(author) }}
-          >
-            {initials(author)}
-          </span>
-          <div className="font-medium text-white">{author}</div>
+          <Avatar url={avatarUrl} name={name} size={36} />
+          <div className="font-medium text-white">{name}</div>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs text-slate-400">
           <span>{timeAgo(post.created_at)}</span>
@@ -87,7 +98,9 @@ export default async function TopicPage({
 
   const { data: rootRow } = await supabase
     .from("messages")
-    .select("id, subject, body_text, sender_email, created_at, seq, list_id")
+    .select(
+      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq, list_id",
+    )
     .eq("id", id)
     .maybeSingle();
   const root = rootRow as (Post & { list_id: string }) | null;
@@ -95,10 +108,41 @@ export default async function TopicPage({
 
   const { data: replyRows } = await supabase
     .from("messages")
-    .select("id, subject, body_text, sender_email, created_at, seq")
+    .select(
+      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq",
+    )
     .eq("reply_to_message_id", id)
     .order("created_at", { ascending: true });
   const replies = (replyRows as Post[]) ?? [];
+
+  // Resolve author name + avatar for each sender (name/avatar only, privacy-scoped).
+  const senderIds = Array.from(
+    new Set(
+      [root, ...replies]
+        .map((p) => p.sender_profile_id)
+        .filter((v): v is string => Boolean(v)),
+    ),
+  );
+  const cards = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+  if (senderIds.length > 0) {
+    const { data: cardRows } = await supabase.rpc("member_cards", {
+      p_ids: senderIds,
+    });
+    for (const c of (cardRows as {
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    }[]) ?? []) {
+      cards.set(c.id, { full_name: c.full_name, avatar_url: c.avatar_url });
+    }
+  }
+  const authorOf = (p: Post) => {
+    const card = p.sender_profile_id ? cards.get(p.sender_profile_id) : undefined;
+    return {
+      name: displayName(p.sender_email, card?.full_name),
+      avatarUrl: card?.avatar_url ?? null,
+    };
+  };
 
   const base = `/groups/${slug}/topics/${root.id}`;
 
@@ -137,10 +181,29 @@ export default async function TopicPage({
           </p>
 
           <div className="space-y-3">
-            <PostCard post={root} permalink={`${base}#m-${root.id}`} />
-            {replies.map((r) => (
-              <PostCard key={r.id} post={r} permalink={`${base}#m-${r.id}`} />
-            ))}
+            {(() => {
+              const a = authorOf(root);
+              return (
+                <PostCard
+                  post={root}
+                  permalink={`${base}#m-${root.id}`}
+                  name={a.name}
+                  avatarUrl={a.avatarUrl}
+                />
+              );
+            })()}
+            {replies.map((r) => {
+              const a = authorOf(r);
+              return (
+                <PostCard
+                  key={r.id}
+                  post={r}
+                  permalink={`${base}#m-${r.id}`}
+                  name={a.name}
+                  avatarUrl={a.avatarUrl}
+                />
+              );
+            })}
           </div>
 
           {canPost ? (
