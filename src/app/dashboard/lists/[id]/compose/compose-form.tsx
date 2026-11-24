@@ -32,7 +32,7 @@ export function ComposeForm({ listId }: { listId: string }) {
           className="input font-mono text-sm"
           placeholder="Write your announcement…"
         />
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-slate-400">
           An unsubscribe footer is added automatically to every email.
         </p>
       </div>

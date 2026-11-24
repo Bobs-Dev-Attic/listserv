@@ -42,14 +42,14 @@ export default async function ListPage({
       <div className="mx-auto max-w-2xl px-4 py-12">
         <Link
           href="/"
-          className="text-sm text-slate-500 hover:text-slate-900"
+          className="text-sm text-slate-500 hover:text-white"
         >
           ← All lists
         </Link>
         <div className="card mt-4 p-8">
-          <h1 className="text-2xl font-bold text-slate-900">{list.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-100">{list.name}</h1>
           {list.description && (
-            <p className="mt-3 whitespace-pre-line text-slate-700">
+            <p className="mt-3 whitespace-pre-line text-slate-200">
               {list.description}
             </p>
           )}

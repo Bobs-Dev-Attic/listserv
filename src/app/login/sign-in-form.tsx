@@ -99,10 +99,10 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
             {error}
           </p>
         )}
-        <div className="flex items-center gap-3 text-xs text-gray-400">
-          <span className="h-px flex-1 bg-gray-200" />
+        <div className="flex items-center gap-3 text-xs text-slate-500">
+          <span className="h-px flex-1 bg-white/15" />
           or
-          <span className="h-px flex-1 bg-gray-200" />
+          <span className="h-px flex-1 bg-white/15" />
         </div>
         <button
           type="button"
@@ -163,7 +163,7 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
               setError(null);
               setInfo(null);
             }}
-            className="text-gray-500 hover:text-gray-900"
+            className="text-slate-400 hover:text-white"
           >
             ← Use a different email
           </button>
@@ -215,7 +215,7 @@ export function SignInForm({ redirectTo = "/groups" }: { redirectTo?: string }) 
           setError(null);
           setInfo(null);
         }}
-        className="w-full text-center text-sm text-gray-500 hover:text-gray-900"
+        className="w-full text-center text-sm text-slate-400 hover:text-white"
       >
         ← Back to Google
       </button>

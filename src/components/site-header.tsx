@@ -12,12 +12,12 @@ export function SiteHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <header className="bg-[#2b3e50] text-white shadow">
+    <header className="bg-[#2b6cb0] text-white shadow">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link href={homeHref} className="flex items-center gap-2 font-semibold">
+          <Link href={homeHref} className="flex items-center gap-2 font-semibold text-white">
             <svg
-              className="h-6 w-6 text-[#4a90d2]"
+              className="h-6 w-6 text-white"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"

@@ -3,34 +3,34 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
-  @apply bg-slate-100 text-slate-900 antialiased;
+  @apply bg-[#2d3139] text-slate-100 antialiased;
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2d3139] disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500;
+    @apply btn bg-[#4a90d2] text-white hover:bg-[#3b7bbf] focus:ring-[#4a90d2];
   }
   .btn-secondary {
-    @apply btn border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-brand-500;
+    @apply btn border border-white/15 bg-white/5 text-slate-200 hover:bg-white/10 focus:ring-[#4a90d2];
   }
   .btn-danger {
-    @apply btn border border-red-300 bg-white text-red-700 hover:bg-red-50 focus:ring-red-500;
+    @apply btn border border-red-500/40 bg-transparent text-red-300 hover:bg-red-500/10 focus:ring-red-500;
   }
   .input {
-    @apply block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500;
+    @apply block w-full rounded-md border border-white/15 bg-[#2d3139] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 shadow-sm focus:border-[#4a90d2] focus:outline-none focus:ring-0;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-slate-300 mb-1;
   }
   .card {
-    @apply rounded-lg border border-slate-200 bg-white shadow-sm;
+    @apply rounded-lg border border-white/10 bg-[#343842] shadow-sm;
   }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;

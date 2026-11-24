@@ -27,20 +27,20 @@ export default async function ListSettingsPage({
       <div>
         <Link
           href={`/dashboard/lists/${id}`}
-          className="text-sm text-gray-500 hover:text-gray-900"
+          className="text-sm text-slate-400 hover:text-white"
         >
           ← {list.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">List settings</h1>
+        <h1 className="mt-2 text-2xl font-bold text-slate-100">List settings</h1>
       </div>
 
       <div className="card p-6">
         <ListForm list={list} />
       </div>
 
-      <div className="card border-red-200 p-6">
-        <h2 className="font-semibold text-red-800">Danger zone</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <div className="card border-red-500/30 p-6">
+        <h2 className="font-semibold text-red-300">Danger zone</h2>
+        <p className="mt-1 text-sm text-slate-300">
           Deleting a list removes all its subscribers and messages. This cannot
           be undone.
         </p>

@@ -9,11 +9,11 @@ export default function NewListPage() {
       <div>
         <Link
           href="/dashboard/lists"
-          className="text-sm text-gray-500 hover:text-gray-900"
+          className="text-sm text-slate-400 hover:text-white"
         >
           ← Lists
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">New list</h1>
+        <h1 className="mt-2 text-2xl font-bold text-slate-100">New list</h1>
       </div>
       <div className="card p-6">
         <ListForm />

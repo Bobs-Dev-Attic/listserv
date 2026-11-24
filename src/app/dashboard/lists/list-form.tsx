@@ -38,7 +38,7 @@ export function ListForm({ list }: { list?: List }) {
       {!isEdit && (
         <div>
           <label htmlFor="slug" className="label">
-            URL slug <span className="text-gray-400">(optional)</span>
+            URL slug <span className="text-slate-500">(optional)</span>
           </label>
           <input
             id="slug"
@@ -46,7 +46,7 @@ export function ListForm({ list }: { list?: List }) {
             placeholder="auto-generated from name"
             className="input"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-slate-400">
             Public page will be at <code>/lists/your-slug</code>.
           </p>
         </div>
@@ -100,7 +100,7 @@ export function ListForm({ list }: { list?: List }) {
 
       <div>
         <label htmlFor="reply_to" className="label">
-          Reply-to address <span className="text-gray-400">(optional)</span>
+          Reply-to address <span className="text-slate-500">(optional)</span>
         </label>
         <input
           id="reply_to"
@@ -117,7 +117,7 @@ export function ListForm({ list }: { list?: List }) {
           type="checkbox"
           name="is_public"
           defaultChecked={list?.is_public ?? true}
-          className="h-4 w-4 rounded border-gray-300 text-brand-600"
+          className="h-4 w-4 rounded border-white/15 text-brand-600"
         />
         Public — show on the directory and allow open signup
       </label>

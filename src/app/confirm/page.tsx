@@ -46,10 +46,10 @@ export default async function ConfirmPage({
       <div className="card max-w-md p-8 text-center">
         {result.status === "confirmed" && (
           <>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-slate-100">
               You&apos;re subscribed 🎉
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-slate-300">
               Your subscription to{" "}
               <strong>{result.list.name}</strong> is confirmed.
             </p>
@@ -57,10 +57,10 @@ export default async function ConfirmPage({
         )}
         {result.status === "already" && (
           <>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-slate-100">
               Already confirmed
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-slate-300">
               You&apos;re already subscribed to{" "}
               <strong>{result.list.name}</strong>.
             </p>
@@ -68,10 +68,10 @@ export default async function ConfirmPage({
         )}
         {result.status === "invalid" && (
           <>
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-slate-100">
               Invalid or expired link
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-slate-300">
               We couldn&apos;t find that confirmation. Try subscribing again.
             </p>
           </>

@@ -26,14 +26,14 @@ export default async function ComposePage({
       <div>
         <Link
           href={`/dashboard/lists/${id}`}
-          className="text-sm text-gray-500 hover:text-gray-900"
+          className="text-sm text-slate-400 hover:text-white"
         >
           ← {list.name}
         </Link>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">
+        <h1 className="mt-2 text-2xl font-bold text-slate-100">
           New message
         </h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-slate-400">
           Save a draft, then review and send it to confirmed subscribers.
         </p>
       </div>

@@ -17,8 +17,8 @@ export default async function LoginPage({
           ListServ
         </Link>
         <div className="card mt-6 p-8">
-          <h1 className="text-xl font-semibold text-gray-900">Sign in</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-xl font-semibold text-slate-100">Sign in</h1>
+          <p className="mt-1 text-sm text-slate-400">
             Continue with Google, or use an email code.
           </p>
           {error && (
@@ -28,7 +28,7 @@ export default async function LoginPage({
           )}
           <SignInForm redirectTo={redirect ?? "/groups"} />
         </div>
-        <p className="mt-4 text-center text-xs text-gray-500">
+        <p className="mt-4 text-center text-xs text-slate-400">
           The first person to sign in becomes the admin.
         </p>
       </div>

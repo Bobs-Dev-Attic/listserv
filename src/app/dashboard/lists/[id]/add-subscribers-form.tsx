@@ -21,11 +21,11 @@ export function AddSubscribersForm({ listId }: { listId: string }) {
         placeholder="alice@example.com, bob@example.com&#10;One per line or comma-separated"
         className="input"
       />
-      <label className="flex items-center gap-2 text-sm text-gray-600">
+      <label className="flex items-center gap-2 text-sm text-slate-300">
         <input
           type="checkbox"
           name="skip_confirmation"
-          className="h-4 w-4 rounded border-gray-300 text-brand-600"
+          className="h-4 w-4 rounded border-white/15 text-brand-600"
         />
         Add as already confirmed (skip the confirmation email)
       </label>
@@ -33,7 +33,7 @@ export function AddSubscribersForm({ listId }: { listId: string }) {
         <button type="submit" className="btn-primary" disabled={pending}>
           {pending ? "Adding…" : "Add subscribers"}
         </button>
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-slate-400">
           By default, each person gets a confirmation email and must opt in.
         </span>
       </div>

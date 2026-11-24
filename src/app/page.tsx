@@ -40,10 +40,10 @@ export default async function HomePage() {
       </SiteHeader>
 
       <div className="mx-auto max-w-4xl px-4 py-12">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-100">
           Mailing lists
         </h1>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 text-slate-300">
           Browse public lists and subscribe. You&apos;ll get a confirmation email
           before anything is sent.
         </p>
@@ -61,13 +61,13 @@ export default async function HomePage() {
               className="card block p-5 transition-shadow hover:shadow-md"
             >
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900">{list.name}</h2>
+                <h2 className="font-semibold text-slate-100">{list.name}</h2>
                 <span className="badge bg-brand-50 text-brand-700">
                   {typeLabel[list.type] ?? list.type}
                 </span>
               </div>
               {list.description && (
-                <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+                <p className="mt-2 line-clamp-3 text-sm text-slate-300">
                   {list.description}
                 </p>
               )}
