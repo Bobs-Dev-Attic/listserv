@@ -10,13 +10,16 @@ export const dynamic = "force-dynamic";
 
 type Post = Pick<
   Message,
-  "id" | "subject" | "body_text" | "sender_email" | "created_at"
+  "id" | "subject" | "body_text" | "sender_email" | "created_at" | "seq"
 >;
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, permalink }: { post: Post; permalink: string }) {
   const author = displayName(post.sender_email);
   return (
-    <div className="rounded-lg border border-white/10 bg-[#343842] p-5">
+    <div
+      id={`m-${post.id}`}
+      className="scroll-mt-20 rounded-lg border border-white/10 bg-[#343842] p-5"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span
@@ -27,8 +30,30 @@ function PostCard({ post }: { post: Post }) {
           </span>
           <div className="font-medium text-white">{author}</div>
         </div>
-        <div className="shrink-0 text-xs text-slate-400">
-          {timeAgo(post.created_at)}
+        <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+          <span>{timeAgo(post.created_at)}</span>
+          {post.seq != null && (
+            <a
+              href={permalink}
+              className="flex items-center gap-1 text-slate-500 hover:text-[#5b9bd5]"
+              title="Permalink to this message"
+            >
+              <span>#{post.seq}</span>
+              <svg
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </a>
+          )}
         </div>
       </div>
       <div className="mt-3 whitespace-pre-wrap text-sm text-slate-200">
@@ -73,7 +98,7 @@ export default async function TopicPage({
 
   const { data: rootRow } = await supabase
     .from("messages")
-    .select("id, subject, body_text, sender_email, created_at, list_id")
+    .select("id, subject, body_text, sender_email, created_at, seq, list_id")
     .eq("id", id)
     .maybeSingle();
   const root = rootRow as (Post & { list_id: string }) | null;
@@ -81,10 +106,12 @@ export default async function TopicPage({
 
   const { data: replyRows } = await supabase
     .from("messages")
-    .select("id, subject, body_text, sender_email, created_at")
+    .select("id, subject, body_text, sender_email, created_at, seq")
     .eq("reply_to_message_id", id)
     .order("created_at", { ascending: true });
   const replies = (replyRows as Post[]) ?? [];
+
+  const base = `/groups/${slug}/topics/${root.id}`;
 
   const canPost =
     (list.type === "discussion" || list.type === "both") &&
@@ -121,9 +148,9 @@ export default async function TopicPage({
           </p>
 
           <div className="space-y-3">
-            <PostCard post={root} />
+            <PostCard post={root} permalink={`${base}#m-${root.id}`} />
             {replies.map((r) => (
-              <PostCard key={r.id} post={r} />
+              <PostCard key={r.id} post={r} permalink={`${base}#m-${r.id}`} />
             ))}
           </div>
 
