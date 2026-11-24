@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { List, Message, DeliveryMode } from "@/lib/database.types";
 import { displayName, timeAgo } from "@/lib/display";
 import { Avatar } from "@/components/avatar";
+import { Markdown } from "@/components/markdown";
 import { GroupSidebar } from "@/components/group-sidebar";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { ReplyForm } from "./reply-form";
@@ -56,8 +57,8 @@ function PostCard({
           <CopyLinkButton path={permalink} />
         </div>
       </div>
-      <div className="mt-3 whitespace-pre-wrap text-sm text-slate-200">
-        {post.body_text}
+      <div className="mt-3">
+        <Markdown>{post.body_text}</Markdown>
       </div>
     </div>
   );

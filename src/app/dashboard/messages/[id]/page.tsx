@@ -47,7 +47,7 @@ export default async function MessagePage({
       (counts[d.status as keyof typeof counts] ?? 0) + 1;
   }
 
-  const emailConfigured = isEmailConfigured();
+  const emailConfigured = await isEmailConfigured();
   const canSend = ["draft", "queued", "sending", "failed"].includes(
     message.status,
   );

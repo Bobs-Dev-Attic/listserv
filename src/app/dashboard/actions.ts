@@ -63,7 +63,7 @@ export async function sendTestEmailAction(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
     return { error: "Enter a valid email address.", message: null };
   }
-  if (!isEmailConfigured()) {
+  if (!(await isEmailConfigured())) {
     return {
       error: "Email isn't configured — set the LISTSERV_EMAIL_* env vars first.",
       message: null,
@@ -266,7 +266,7 @@ export async function addSubscribersAction(
   let sent = 0;
   let failed = 0;
   if (pending.length > 0) {
-    if (!isEmailConfigured()) {
+    if (!(await isEmailConfigured())) {
       revalidatePath(`/dashboard/lists/${listId}`);
       return {
         error: null,

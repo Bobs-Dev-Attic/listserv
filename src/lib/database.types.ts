@@ -81,6 +81,20 @@ export interface Message {
   sent_at: string | null;
 }
 
+export interface EmailServer {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  secure: boolean;
+  username: string;
+  password: string;
+  from_email: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Delivery {
   id: string;
   message_id: string;

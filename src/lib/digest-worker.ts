@@ -27,7 +27,7 @@ export async function processDigests(): Promise<DigestSummary> {
     messages: 0,
     sent: 0,
     failed: 0,
-    configured: isEmailConfigured(),
+    configured: await isEmailConfigured(),
   };
   if (!summary.configured) return summary;
 

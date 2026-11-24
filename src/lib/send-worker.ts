@@ -19,7 +19,7 @@ const BATCH = 100;
  */
 export async function processMessage(messageId: string): Promise<SendSummary> {
   const admin = createAdminClient();
-  const configured = isEmailConfigured();
+  const configured = await isEmailConfigured();
 
   const { data: msgRow } = await admin
     .from("messages")

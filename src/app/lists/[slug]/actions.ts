@@ -73,7 +73,7 @@ export async function subscribeAction(
 
   const confirmUrl = `${siteUrl()}/confirm?token=${token}`;
 
-  if (isEmailConfigured()) {
+  if (await isEmailConfigured()) {
     try {
       await sendEmail({
         to: email,
