@@ -13,19 +13,32 @@ export interface PostState {
   notice?: string | null;
 }
 
-/** Is this member flagged `moderated` on this list? Their posts are held. */
+/**
+ * Should this member's posts be held? True if they're moderated on this list
+ * (subscriptions.moderated) or globally as a user (profiles.moderated).
+ */
 async function isModerated(
   supabase: Awaited<ReturnType<typeof createClient>>,
   listId: string,
   profileId: string,
 ): Promise<boolean> {
-  const { data } = await supabase
-    .from("subscriptions")
-    .select("moderated")
-    .eq("list_id", listId)
-    .eq("profile_id", profileId)
-    .maybeSingle();
-  return (data as { moderated: boolean } | null)?.moderated === true;
+  const [{ data: sub }, { data: prof }] = await Promise.all([
+    supabase
+      .from("subscriptions")
+      .select("moderated")
+      .eq("list_id", listId)
+      .eq("profile_id", profileId)
+      .maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("moderated")
+      .eq("id", profileId)
+      .maybeSingle(),
+  ]);
+  return (
+    (sub as { moderated: boolean } | null)?.moderated === true ||
+    (prof as { moderated: boolean } | null)?.moderated === true
+  );
 }
 
 export async function signOutAction() {

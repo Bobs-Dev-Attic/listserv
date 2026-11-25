@@ -85,6 +85,27 @@ export async function setUserStatusAction(formData: FormData) {
   revalidatePath("/dashboard/users");
 }
 
+export async function setUserModerationAction(formData: FormData) {
+  const { supabase, profile } = await requireAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const moderated = formData.get("moderated") === "1";
+  const { data: target } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+  await supabase.from("profiles").update({ moderated }).eq("id", id);
+  await logAudit({
+    action: moderated ? "user.moderate" : "user.unmoderate",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "user",
+    targetId: id,
+    summary: `${moderated ? "Moderated" : "Unmoderated"} ${(target as { email: string } | null)?.email ?? id} (all groups)`,
+  });
+  revalidatePath("/dashboard/users");
+}
+
 // --------------------------- smtp / email ---------------------------
 
 export interface TestEmailState {

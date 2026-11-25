@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/avatar";
 import { displayName } from "@/lib/display";
-import { setUserRoleAction, setUserStatusAction } from "../actions";
+import {
+  setUserRoleAction,
+  setUserStatusAction,
+  setUserModerationAction,
+} from "../actions";
 import { savePrefsAction } from "./prefs";
 
 export interface UserRow {
@@ -13,6 +17,7 @@ export interface UserRow {
   avatar_url: string | null;
   role: string;
   status: string;
+  moderated: boolean;
   created_at: string;
 }
 
@@ -277,11 +282,21 @@ export function UsersTable({
                       </span>
                     </td>
                     <td className="px-4 py-2">
-                      <span
-                        className={`badge ${STATUS_BADGE[u.status] ?? "bg-white/10 text-slate-300"}`}
-                      >
-                        {u.status}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`badge ${STATUS_BADGE[u.status] ?? "bg-white/10 text-slate-300"}`}
+                        >
+                          {u.status}
+                        </span>
+                        {u.moderated && (
+                          <span
+                            className="badge bg-amber-500/15 text-amber-300"
+                            title="Posts held for approval across all groups"
+                          >
+                            moderated
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2 text-slate-400">
                       {new Date(u.created_at).toLocaleDateString()}
@@ -336,6 +351,17 @@ export function UsersTable({
                               </button>
                             </form>
                           )}
+                          <form action={setUserModerationAction}>
+                            <input type="hidden" name="id" value={u.id} />
+                            <input
+                              type="hidden"
+                              name="moderated"
+                              value={u.moderated ? "0" : "1"}
+                            />
+                            <button className="text-xs font-medium text-amber-300 hover:underline">
+                              {u.moderated ? "Unmoderate" : "Moderate"}
+                            </button>
+                          </form>
                         </div>
                       )}
                     </td>
