@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import {
   updateNameAction,
+  updateUsernameAction,
   updateEmailAction,
   type FormState,
 } from "./actions";
@@ -46,6 +47,45 @@ export function NameForm({ fullName }: { fullName: string }) {
       <Feedback state={state} />
       <button type="submit" className="btn-primary" disabled={pending}>
         {pending ? "Saving…" : "Save name"}
+      </button>
+    </form>
+  );
+}
+
+export function UsernameForm({ username }: { username: string }) {
+  const [state, action, pending] = useActionState(
+    updateUsernameAction,
+    initial,
+  );
+  return (
+    <form action={action} className="space-y-3">
+      <div>
+        <label htmlFor="username" className="label">
+          Username
+        </label>
+        <div className="flex items-center">
+          <span className="rounded-l-md border border-r-0 border-white/15 bg-white/5 px-3 py-2 text-slate-400">
+            @
+          </span>
+          <input
+            id="username"
+            name="username"
+            defaultValue={username}
+            placeholder="handle"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            className="input rounded-l-none"
+          />
+        </div>
+        <p className="mt-1 text-xs text-slate-500">
+          3–30 characters: letters, numbers and underscores. Shown on your posts.
+          Leave blank to remove.
+        </p>
+      </div>
+      <Feedback state={state} />
+      <button type="submit" className="btn-primary" disabled={pending}>
+        {pending ? "Saving…" : "Save username"}
       </button>
     </form>
   );

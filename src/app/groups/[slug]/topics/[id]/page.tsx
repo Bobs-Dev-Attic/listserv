@@ -29,6 +29,7 @@ function PostCard({
   post,
   permalink,
   name,
+  handle,
   avatarUrl,
   slug,
   topicId,
@@ -38,6 +39,7 @@ function PostCard({
   post: Post;
   permalink: string;
   name: string;
+  handle: string | null;
   avatarUrl: string | null;
   slug: string;
   topicId: string;
@@ -60,7 +62,12 @@ function PostCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <Avatar url={avatarUrl} name={name} size={36} />
-          <div className="font-medium text-white">{name}</div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-medium text-white">{name}</span>
+            {handle && (
+              <span className="text-xs text-[#5b9bd5]">@{handle}</span>
+            )}
+          </div>
           {pending && (
             <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-300">
               Pending approval
@@ -167,7 +174,10 @@ export default async function TopicPage({
         .filter((v): v is string => Boolean(v)),
     ),
   );
-  const cards = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+  const cards = new Map<
+    string,
+    { full_name: string | null; avatar_url: string | null; username: string | null }
+  >();
   if (senderIds.length > 0) {
     const { data: cardRows } = await supabase.rpc("member_cards", {
       p_ids: senderIds,
@@ -176,8 +186,13 @@ export default async function TopicPage({
       id: string;
       full_name: string | null;
       avatar_url: string | null;
+      username: string | null;
     }[]) ?? []) {
-      cards.set(c.id, { full_name: c.full_name, avatar_url: c.avatar_url });
+      cards.set(c.id, {
+        full_name: c.full_name,
+        avatar_url: c.avatar_url,
+        username: c.username,
+      });
     }
   }
   const authorOf = (p: Post) => {
@@ -185,6 +200,7 @@ export default async function TopicPage({
     return {
       name: displayName(p.sender_email, card?.full_name),
       avatarUrl: card?.avatar_url ?? null,
+      handle: card?.username ?? null,
     };
   };
 
@@ -245,6 +261,7 @@ export default async function TopicPage({
                   post={root}
                   permalink={`${base}#m-${root.id}`}
                   name={a.name}
+                  handle={a.handle}
                   avatarUrl={a.avatarUrl}
                   slug={slug}
                   topicId={root.id}
@@ -261,6 +278,7 @@ export default async function TopicPage({
                   post={r}
                   permalink={`${base}#m-${r.id}`}
                   name={a.name}
+                  handle={a.handle}
                   avatarUrl={a.avatarUrl}
                   slug={slug}
                   topicId={root.id}

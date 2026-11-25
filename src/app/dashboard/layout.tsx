@@ -21,6 +21,7 @@ export default async function DashboardLayout({
           name={displayName(profile.email, profile.full_name)}
           email={profile.email}
           avatarUrl={profile.avatar_url}
+          handle={profile.username}
           isAdmin
         />
       </SiteHeader>

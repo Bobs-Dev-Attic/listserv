@@ -9,11 +9,13 @@ export function UserMenu({
   name,
   email,
   avatarUrl,
+  handle = null,
   isAdmin = false,
 }: {
   name: string;
   email: string;
   avatarUrl: string | null;
+  handle?: string | null;
   isAdmin?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -70,6 +72,9 @@ export function UserMenu({
             <Avatar url={avatarUrl} name={name} size={40} />
             <div className="min-w-0">
               <div className="truncate font-semibold text-white">{name}</div>
+              {handle && (
+                <div className="truncate text-xs text-[#5b9bd5]">@{handle}</div>
+              )}
               <div className="truncate text-xs text-slate-400">{email}</div>
             </div>
           </div>
