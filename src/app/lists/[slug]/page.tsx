@@ -39,7 +39,7 @@ export default async function ListPage({
         </Link>
       </SiteHeader>
 
-      <div className="mx-auto max-w-2xl px-4 py-12">
+      <div className="w-full px-4 py-12 md:px-8">
         <Link
           href="/"
           className="text-sm text-slate-500 hover:text-white"
