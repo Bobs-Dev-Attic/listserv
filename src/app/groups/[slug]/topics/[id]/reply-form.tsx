@@ -29,6 +29,11 @@ export function ReplyForm({ slug, topicId }: { slug: string; topicId: string }) 
           {state.error}
         </p>
       )}
+      {state.notice && (
+        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          {state.notice}
+        </p>
+      )}
       <div className="flex justify-end">
         <button
           type="submit"
