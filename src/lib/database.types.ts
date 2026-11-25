@@ -34,6 +34,7 @@ export interface Profile {
   avatar_url: string | null;
   role: UserRole;
   status: UserStatus;
+  moderated: boolean;
   created_at: string;
 }
 

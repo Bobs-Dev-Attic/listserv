@@ -14,13 +14,15 @@ export interface SideNavItem {
 export function SideNav({
   heading,
   items,
+  footer,
 }: {
   heading?: string;
   items: SideNavItem[];
+  footer?: React.ReactNode;
 }) {
   const path = usePathname();
   return (
-    <aside className="w-full shrink-0 bg-[#2b3e50] text-sm text-slate-200 md:w-56">
+    <aside className="flex w-full shrink-0 flex-col bg-[#2b3e50] text-sm text-slate-200 md:w-56">
       {heading && (
         <div className="truncate border-b border-white/10 px-4 py-3 font-semibold text-white">
           {heading}
@@ -47,6 +49,11 @@ export function SideNav({
           );
         })}
       </nav>
+      {footer && (
+        <div className="mt-auto border-t border-white/10 px-4 py-3 text-xs text-slate-400">
+          {footer}
+        </div>
+      )}
     </aside>
   );
 }

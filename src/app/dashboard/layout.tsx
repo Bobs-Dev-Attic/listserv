@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { SiteHeader } from "@/components/site-header";
 import { SideNav } from "@/components/side-nav";
+import { VERSION_LABEL } from "@/lib/version";
 import { signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +47,11 @@ export default async function DashboardLayout({
             { href: "/dashboard/audit", label: "Audit log" },
             { href: "/dashboard/smtp", label: "SMTP" },
           ]}
+          footer={
+            <span title="App version">
+              ListServ <span className="text-slate-300">{VERSION_LABEL}</span>
+            </span>
+          }
         />
         <main className="min-w-0 flex-1 px-4 py-8 md:px-8">{children}</main>
       </div>
