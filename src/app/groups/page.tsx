@@ -47,7 +47,7 @@ export default async function GroupsHome() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+    <div className="w-full px-4 py-8 md:px-8">
       <section>
         <h1 className="text-2xl font-bold text-white">Your groups</h1>
         {myLists.length === 0 ? (
