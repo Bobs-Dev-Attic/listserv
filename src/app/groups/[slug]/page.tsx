@@ -97,6 +97,12 @@ export default async function GroupPage({
     (list.type === "discussion" || list.type === "both") &&
     list.posting_policy === "subscribers";
 
+  const { data: canModMembers } = await supabase.rpc("user_has_permission", {
+    p_perm: "moderate_members",
+    p_list: list.id,
+  });
+  const canModerateMembers = canModMembers === true;
+
   const { data: msgRows } = await supabase
     .from("messages")
     .select(
@@ -167,6 +173,7 @@ export default async function GroupPage({
         canPost={canPost}
         active="messages"
         deliveryMode={member?.delivery_mode}
+        canModerateMembers={canModerateMembers}
       />
 
       <div className="min-w-0 flex-1 px-4 py-5 md:px-8">

@@ -7,8 +7,8 @@ export const PERMISSIONS = [
   },
   {
     key: "moderate_members",
-    label: "Manage group members",
-    help: "Add/remove/confirm subscribers of a group.",
+    label: "Moderate members",
+    help: "Mark members of a group as moderated (hold their posts for approval).",
   },
   {
     key: "manage_lists",

@@ -194,6 +194,12 @@ export default async function TopicPage({
   });
   const canModerate = modData === true;
 
+  const { data: modMembersData } = await supabase.rpc("user_has_permission", {
+    p_perm: "moderate_members",
+    p_list: list.id,
+  });
+  const canModerateMembers = modMembersData === true;
+
   const base = `/groups/${slug}/topics/${root.id}`;
 
   const canPost =
@@ -209,6 +215,7 @@ export default async function TopicPage({
         canPost={canPost}
         active="messages"
         deliveryMode={member?.delivery_mode}
+        canModerateMembers={canModerateMembers}
       />
 
       <div className="min-w-0 flex-1 px-4 py-5 md:px-8">
