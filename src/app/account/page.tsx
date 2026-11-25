@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { displayName } from "@/lib/display";
 import { SiteHeader } from "@/components/site-header";
 import { SideNav } from "@/components/side-nav";
-import { signOutAction } from "@/app/groups/actions";
+import { UserMenu } from "@/components/user-menu";
 import { AvatarPicker } from "./avatar-picker";
 import { NameForm, EmailForm } from "./profile-forms";
 
@@ -29,14 +29,12 @@ export default async function AccountPage() {
   return (
     <div className="min-h-screen">
       <SiteHeader fullWidth homeHref={isAdmin ? "/dashboard" : "/groups"}>
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            className="rounded border border-white/20 px-3 py-1.5 text-slate-100 hover:bg-white/10"
-          >
-            Sign out
-          </button>
-        </form>
+        <UserMenu
+          name={name}
+          email={email}
+          avatarUrl={profile.avatar_url}
+          isAdmin={isAdmin}
+        />
       </SiteHeader>
 
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col md:flex-row">

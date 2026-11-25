@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
+import { displayName } from "@/lib/display";
 import { SiteHeader } from "@/components/site-header";
 import { SideNav } from "@/components/side-nav";
+import { UserMenu } from "@/components/user-menu";
 import { VERSION_LABEL } from "@/lib/version";
-import { signOutAction } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,23 +17,12 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen">
       <SiteHeader fullWidth homeHref="/dashboard" title="ListServ admin">
-        <Link
-          href="/account"
-          className="hidden text-slate-300 hover:text-white sm:inline"
-        >
-          {profile.email}
-        </Link>
-        <Link href="/" className="text-slate-200 hover:text-white">
-          View site
-        </Link>
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            className="rounded border border-white/20 px-3 py-1.5 text-slate-100 hover:bg-white/10"
-          >
-            Log out
-          </button>
-        </form>
+        <UserMenu
+          name={displayName(profile.email, profile.full_name)}
+          email={profile.email}
+          avatarUrl={profile.avatar_url}
+          isAdmin
+        />
       </SiteHeader>
 
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col md:flex-row">

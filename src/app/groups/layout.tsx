@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { displayName } from "@/lib/display";
-import { Avatar } from "@/components/avatar";
-import { signOutAction } from "./actions";
+import { UserMenu } from "@/components/user-menu";
 
 export const dynamic = "force-dynamic";
 
@@ -45,27 +44,12 @@ export default async function GroupsLayout({
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm">
-            {profile.role === "admin" && (
-              <Link href="/dashboard" className="text-blue-100 hover:text-white">
-                Admin
-              </Link>
-            )}
-            <Link
-              href="/account"
-              className="flex items-center gap-2 text-blue-100 hover:text-white"
-              title="Account"
-            >
-              <Avatar url={profile.avatar_url} name={name} size={28} />
-              <span className="hidden sm:inline">{name}</span>
-            </Link>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="rounded border border-white/30 px-3 py-1.5 text-white hover:bg-white/10"
-              >
-                Sign out
-              </button>
-            </form>
+            <UserMenu
+              name={name}
+              email={profile.email}
+              avatarUrl={profile.avatar_url}
+              isAdmin={profile.role === "admin"}
+            />
           </div>
         </div>
       </header>
