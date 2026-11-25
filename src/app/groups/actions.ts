@@ -332,3 +332,36 @@ export async function rejectPostAction(formData: FormData) {
   revalidatePath(`/groups/${slug}`);
   revalidatePath(`/groups/${slug}/topics/${topicId}`);
 }
+
+/**
+ * Apply or clear the "moderated" rule on a member. Authorized inside the
+ * set_subscription_moderated() SECURITY DEFINER function, which permits only
+ * admins and holders of the `moderate_members` permission on the member's
+ * list. Usable from the member area so a role-holder (not just admins) can
+ * moderate members of lists they manage.
+ */
+export async function setMemberModerationAction(formData: FormData) {
+  const { supabase, user } = await requireSessionUser();
+  const subId = String(formData.get("sub_id") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const moderated = formData.get("moderated") === "1";
+  if (!subId) return;
+
+  const { data, error } = await supabase.rpc("set_subscription_moderated", {
+    p_sub: subId,
+    p_moderated: moderated,
+  });
+
+  if (!error && data) {
+    await logAudit({
+      action: moderated ? "subscription.moderate" : "subscription.unmoderate",
+      actorId: user.id,
+      actorEmail: user.email ?? null,
+      targetType: "subscription",
+      targetId: subId,
+      summary: `${moderated ? "Moderated" : "Unmoderated"} a member`,
+      metadata: { list_id: data },
+    });
+  }
+  if (slug) revalidatePath(`/groups/${slug}/members`);
+}
