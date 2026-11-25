@@ -39,7 +39,7 @@ export default async function HomePage() {
         )}
       </SiteHeader>
 
-      <div className="mx-auto max-w-4xl px-4 py-12">
+      <div className="w-full px-4 py-12 md:px-8">
         <h1 className="text-3xl font-bold tracking-tight text-slate-100">
           Mailing lists
         </h1>
