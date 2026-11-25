@@ -8,6 +8,7 @@ import { AddSubscribersForm } from "./add-subscribers-form";
 import {
   setSubscriptionStatusAction,
   removeSubscriptionAction,
+  setSubscriptionModerationAction,
 } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -123,6 +124,7 @@ export default async function ListDetailPage({
                 <tr>
                   <th className="px-4 py-2 font-medium">Email</th>
                   <th className="px-4 py-2 font-medium">Status</th>
+                  <th className="px-4 py-2 font-medium">Posting</th>
                   <th className="px-4 py-2 font-medium">Delivery</th>
                   <th className="px-4 py-2 font-medium">Subscribed</th>
                   <th className="px-4 py-2 text-right font-medium">Actions</th>
@@ -138,6 +140,15 @@ export default async function ListDetailPage({
                       <span className={`badge ${subStatusStyles[s.status]}`}>
                         {s.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      {s.moderated ? (
+                        <span className="badge bg-amber-500/15 text-amber-300">
+                          moderated
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-2 text-slate-300">
                       {deliveryLabel[s.delivery_mode] ?? s.delivery_mode}
@@ -171,6 +182,18 @@ export default async function ListDetailPage({
                             </button>
                           </form>
                         )}
+                        <form action={setSubscriptionModerationAction}>
+                          <input type="hidden" name="id" value={s.id} />
+                          <input type="hidden" name="list_id" value={id} />
+                          <input
+                            type="hidden"
+                            name="moderated"
+                            value={s.moderated ? "0" : "1"}
+                          />
+                          <button className="text-xs font-medium text-amber-300 hover:underline">
+                            {s.moderated ? "Unmoderate" : "Moderate"}
+                          </button>
+                        </form>
                         <form action={removeSubscriptionAction}>
                           <input type="hidden" name="id" value={s.id} />
                           <input type="hidden" name="list_id" value={id} />

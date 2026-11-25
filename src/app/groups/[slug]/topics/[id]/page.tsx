@@ -9,6 +9,7 @@ import { GroupSidebar } from "@/components/group-sidebar";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { ReplyForm } from "./reply-form";
 import { DeletePostButton } from "./delete-post-button";
+import { ModerationControls } from "./moderation-controls";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ type Post = Pick<
   | "sender_profile_id"
   | "created_at"
   | "seq"
+  | "moderation_status"
 >;
 
 function PostCard({
@@ -29,6 +31,7 @@ function PostCard({
   name,
   avatarUrl,
   slug,
+  topicId,
   isRoot,
   canModerate,
 }: {
@@ -37,20 +40,46 @@ function PostCard({
   name: string;
   avatarUrl: string | null;
   slug: string;
+  topicId: string;
   isRoot: boolean;
   canModerate: boolean;
 }) {
+  const pending = post.moderation_status === "pending";
+  const rejected = post.moderation_status === "rejected";
   return (
     <div
       id={`m-${post.id}`}
-      className="scroll-mt-20 rounded-lg border border-white/10 bg-[#343842] p-5"
+      className={`scroll-mt-20 rounded-lg border p-5 ${
+        pending
+          ? "border-amber-500/40 bg-amber-500/5"
+          : rejected
+            ? "border-white/10 bg-[#2d3139] opacity-70"
+            : "border-white/10 bg-[#343842]"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <Avatar url={avatarUrl} name={name} size={36} />
           <div className="font-medium text-white">{name}</div>
+          {pending && (
+            <span className="rounded bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-300">
+              Pending approval
+            </span>
+          )}
+          {rejected && (
+            <span className="rounded bg-rose-500/15 px-2 py-0.5 text-xs font-medium text-rose-300">
+              Rejected
+            </span>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs text-slate-400">
+          {canModerate && pending && (
+            <ModerationControls
+              messageId={post.id}
+              slug={slug}
+              topicId={topicId}
+            />
+          )}
           <span>{timeAgo(post.created_at)}</span>
           {post.seq != null && (
             <a
@@ -114,7 +143,7 @@ export default async function TopicPage({
   const { data: rootRow } = await supabase
     .from("messages")
     .select(
-      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq, list_id",
+      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq, moderation_status, list_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -124,7 +153,7 @@ export default async function TopicPage({
   const { data: replyRows } = await supabase
     .from("messages")
     .select(
-      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq",
+      "id, subject, body_text, sender_email, sender_profile_id, created_at, seq, moderation_status",
     )
     .eq("reply_to_message_id", id)
     .order("created_at", { ascending: true });
@@ -211,6 +240,7 @@ export default async function TopicPage({
                   name={a.name}
                   avatarUrl={a.avatarUrl}
                   slug={slug}
+                  topicId={root.id}
                   isRoot
                   canModerate={canModerate}
                 />
@@ -226,6 +256,7 @@ export default async function TopicPage({
                   name={a.name}
                   avatarUrl={a.avatarUrl}
                   slug={slug}
+                  topicId={root.id}
                   isRoot={false}
                   canModerate={canModerate}
                 />

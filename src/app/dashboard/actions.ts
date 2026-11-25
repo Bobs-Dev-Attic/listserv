@@ -411,6 +411,29 @@ export async function removeSubscriptionAction(formData: FormData) {
   revalidatePath(`/dashboard/lists/${listId}`);
 }
 
+export async function setSubscriptionModerationAction(formData: FormData) {
+  const { supabase, profile } = await requireAdminClient();
+  const id = String(formData.get("id") ?? "");
+  const listId = String(formData.get("list_id") ?? "");
+  const moderated = formData.get("moderated") === "1";
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("email")
+    .eq("id", id)
+    .maybeSingle();
+  await supabase.from("subscriptions").update({ moderated }).eq("id", id);
+  await logAudit({
+    action: moderated ? "subscription.moderate" : "subscription.unmoderate",
+    actorId: profile.id,
+    actorEmail: profile.email,
+    targetType: "subscription",
+    targetId: id,
+    summary: `${moderated ? "Moderated" : "Unmoderated"} ${(sub as { email: string } | null)?.email ?? id}`,
+    metadata: { list_id: listId },
+  });
+  revalidatePath(`/dashboard/lists/${listId}`);
+}
+
 // --------------------------- messages ---------------------------
 
 export interface ComposeState {

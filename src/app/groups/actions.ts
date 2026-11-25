@@ -10,6 +10,22 @@ import type { List, Message } from "@/lib/database.types";
 
 export interface PostState {
   error: string | null;
+  notice?: string | null;
+}
+
+/** Is this member flagged `moderated` on this list? Their posts are held. */
+async function isModerated(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  listId: string,
+  profileId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("subscriptions")
+    .select("moderated")
+    .eq("list_id", listId)
+    .eq("profile_id", profileId)
+    .maybeSingle();
+  return (data as { moderated: boolean } | null)?.moderated === true;
 }
 
 export async function signOutAction() {
@@ -129,6 +145,8 @@ export async function createTopicAction(
   const list = listRow as Pick<List, "id" | "name" | "type" | "posting_policy"> | null;
   if (!list) return { error: "Group not found." };
 
+  const held = await isModerated(supabase, list.id, user.id);
+
   const { data, error } = await supabase
     .from("messages")
     .insert({
@@ -138,6 +156,7 @@ export async function createTopicAction(
       body_text: body,
       sender_profile_id: user.id,
       sender_email: user.email,
+      moderation_status: held ? "pending" : "approved",
     })
     .select("id")
     .single();
@@ -147,7 +166,7 @@ export async function createTopicAction(
   }
 
   const messageId = (data as { id: string }).id;
-  await fanOut(messageId);
+  if (!held) await fanOut(messageId);
   redirect(`/groups/${slug}/topics/${messageId}`);
 }
 
@@ -172,6 +191,8 @@ export async function replyAction(
 
   const subject = topic.subject.replace(/^re:\s*/i, "");
 
+  const held = await isModerated(supabase, topic.list_id, user.id);
+
   const { data, error } = await supabase
     .from("messages")
     .insert({
@@ -182,6 +203,7 @@ export async function replyAction(
       sender_profile_id: user.id,
       sender_email: user.email,
       reply_to_message_id: topic.id,
+      moderation_status: held ? "pending" : "approved",
     })
     .select("id")
     .single();
@@ -190,9 +212,12 @@ export async function replyAction(
     return { error: "You don't have permission to post to this group." };
   }
 
-  await fanOut((data as { id: string }).id);
+  if (!held) await fanOut((data as { id: string }).id);
   revalidatePath(`/groups/${slug}/topics/${topicId}`);
-  return { error: null };
+  return {
+    error: null,
+    notice: held ? "Your reply was submitted and is awaiting a moderator." : null,
+  };
 }
 
 /**
@@ -241,4 +266,69 @@ export async function deletePostAction(formData: FormData) {
     summary: "Deleted a reply (moderation)",
   });
   revalidatePath(`/groups/${slug}`);
+}
+
+/**
+ * Approve a held (pending) post. Authorized by RLS + the moderation guard
+ * trigger: only admins and list moderators can change moderation_status. On
+ * success the post becomes visible and is delivered to subscribers.
+ */
+export async function approvePostAction(formData: FormData) {
+  const { supabase, user } = await requireSessionUser();
+  const messageId = String(formData.get("message_id") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const topicId = String(formData.get("topic_id") ?? "") || messageId;
+  if (!messageId) return;
+
+  const { data, error } = await supabase
+    .from("messages")
+    .update({ moderation_status: "approved" })
+    .eq("id", messageId)
+    .eq("moderation_status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (!error && data) {
+    await fanOut(messageId);
+    await logAudit({
+      action: "post.approve",
+      actorId: user.id,
+      actorEmail: user.email ?? null,
+      targetType: "message",
+      targetId: messageId,
+      summary: "Approved a held post",
+    });
+  }
+  revalidatePath(`/groups/${slug}`);
+  revalidatePath(`/groups/${slug}/topics/${topicId}`);
+}
+
+/** Reject a held (pending) post. It stays recorded but hidden from members. */
+export async function rejectPostAction(formData: FormData) {
+  const { supabase, user } = await requireSessionUser();
+  const messageId = String(formData.get("message_id") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const topicId = String(formData.get("topic_id") ?? "") || messageId;
+  if (!messageId) return;
+
+  const { data } = await supabase
+    .from("messages")
+    .update({ moderation_status: "rejected" })
+    .eq("id", messageId)
+    .eq("moderation_status", "pending")
+    .select("id")
+    .maybeSingle();
+
+  if (data) {
+    await logAudit({
+      action: "post.reject",
+      actorId: user.id,
+      actorEmail: user.email ?? null,
+      targetType: "message",
+      targetId: messageId,
+      summary: "Rejected a held post",
+    });
+  }
+  revalidatePath(`/groups/${slug}`);
+  revalidatePath(`/groups/${slug}/topics/${topicId}`);
 }
