@@ -54,7 +54,7 @@ export default async function NewTopicPage({
       />
 
       <div className="min-w-0 flex-1 px-4 py-5 md:px-8">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="w-full">
           <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
             <Link href="/groups" className="hover:text-white">
               Groups

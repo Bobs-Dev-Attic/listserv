@@ -43,7 +43,7 @@ export default async function AccountPage() {
         <SideNav heading="Account" items={navItems} />
 
         <main className="min-w-0 flex-1 px-4 py-8 md:px-8">
-          <div className="mx-auto max-w-2xl space-y-6">
+          <div className="space-y-6">
             <h1 className="text-2xl font-bold text-slate-100">Profile</h1>
 
             <section className="card p-6">
