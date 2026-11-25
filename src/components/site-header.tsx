@@ -5,21 +5,17 @@ export function SiteHeader({
   title = "ListServ",
   nav,
   children,
-  fullWidth = false,
 }: {
   homeHref?: string;
   title?: string;
   nav?: React.ReactNode;
   children?: React.ReactNode;
+  /** @deprecated The header always spans full width now. */
   fullWidth?: boolean;
 }) {
   return (
     <header className="bg-[#2b6cb0] text-white shadow">
-      <div
-        className={`flex items-center justify-between px-4 py-3 ${
-          fullWidth ? "" : "mx-auto max-w-6xl"
-        }`}
-      >
+      <div className="flex items-center justify-between px-4 py-3 md:px-8">
         <div className="flex items-center gap-6">
           <Link href={homeHref} className="flex items-center gap-2 font-semibold text-white">
             <svg
