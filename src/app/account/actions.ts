@@ -32,6 +32,37 @@ export async function updateNameAction(
   return { error: null, message: "Name updated." };
 }
 
+export async function updateUsernameAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const { supabase, user } = await requireUserClient();
+  const raw = String(formData.get("username") ?? "").trim().replace(/^@/, "");
+  if (raw && !/^[A-Za-z0-9_]{3,30}$/.test(raw)) {
+    return {
+      error:
+        "Usernames are 3–30 characters: letters, numbers and underscores only.",
+      message: null,
+    };
+  }
+  const { error } = await supabase
+    .from("profiles")
+    .update({ username: raw || null })
+    .eq("id", user.id);
+  if (error) {
+    if (error.code === "23505") {
+      return { error: "That username is already taken.", message: null };
+    }
+    return { error: error.message, message: null };
+  }
+  revalidatePath("/account");
+  revalidatePath("/groups");
+  return {
+    error: null,
+    message: raw ? `Username set to @${raw}.` : "Username cleared.",
+  };
+}
+
 export async function updateEmailAction(
   _prev: FormState,
   formData: FormData,

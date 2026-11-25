@@ -32,6 +32,7 @@ export default async function HomePage() {
             name={displayName(profile.email, profile.full_name)}
             email={profile.email}
             avatarUrl={profile.avatar_url}
+            handle={profile.username}
             isAdmin={profile.role === "admin"}
           />
         ) : (

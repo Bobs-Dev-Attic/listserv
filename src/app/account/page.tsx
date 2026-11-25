@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SideNav } from "@/components/side-nav";
 import { UserMenu } from "@/components/user-menu";
 import { AvatarPicker } from "./avatar-picker";
-import { NameForm, EmailForm } from "./profile-forms";
+import { NameForm, UsernameForm, EmailForm } from "./profile-forms";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +33,7 @@ export default async function AccountPage() {
           name={name}
           email={email}
           avatarUrl={profile.avatar_url}
+          handle={profile.username}
           isAdmin={isAdmin}
         />
       </SiteHeader>
@@ -56,6 +57,11 @@ export default async function AccountPage() {
             <section className="card p-6">
               <h2 className="mb-4 font-semibold text-slate-100">Name</h2>
               <NameForm fullName={profile.full_name ?? ""} />
+            </section>
+
+            <section className="card p-6">
+              <h2 className="mb-4 font-semibold text-slate-100">Username</h2>
+              <UsernameForm username={profile.username ?? ""} />
             </section>
 
             <section className="card p-6">

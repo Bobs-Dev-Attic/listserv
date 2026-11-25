@@ -48,6 +48,7 @@ export default async function GroupsLayout({
               name={name}
               email={profile.email}
               avatarUrl={profile.avatar_url}
+              handle={profile.username}
               isAdmin={profile.role === "admin"}
             />
           </div>
