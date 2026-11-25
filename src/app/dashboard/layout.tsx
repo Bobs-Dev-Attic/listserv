@@ -16,7 +16,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen">
-      <SiteHeader fullWidth homeHref="/dashboard" title="ListServ admin">
+      <SiteHeader fullWidth homeHref="/dashboard" title="ListServ Admin">
         <UserMenu
           name={displayName(profile.email, profile.full_name)}
           email={profile.email}
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
             { href: "/dashboard/users", label: "Users" },
             { href: "/dashboard/roles", label: "Roles" },
             { href: "/dashboard/audit", label: "Audit log" },
-            { href: "/dashboard/smtp", label: "SMTP" },
+            { href: "/dashboard/smtp", label: "Email / SMTP" },
           ]}
           footer={
             <span title="App version">
