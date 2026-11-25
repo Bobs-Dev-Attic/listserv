@@ -16,7 +16,7 @@ export default async function GroupsLayout({
   return (
     <div className="min-h-screen bg-[#2d3139] text-slate-200">
       <header className="bg-[#2b6cb0] text-white shadow">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 md:px-8">
           <div className="flex items-center gap-6">
             <Link href="/groups" className="flex items-center gap-2 font-semibold text-white">
               <svg
