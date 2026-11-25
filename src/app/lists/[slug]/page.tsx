@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+import { getProfile } from "@/lib/auth";
+import { displayName } from "@/lib/display";
 import { SiteHeader } from "@/components/site-header";
+import { UserMenu } from "@/components/user-menu";
 import type { List } from "@/lib/database.types";
 import { SubscribeForm } from "./subscribe-form";
 
@@ -22,7 +24,7 @@ export default async function ListPage({
 }) {
   const { slug } = await params;
   const supabase = await createClient();
-  const user = await getUser();
+  const profile = await getProfile();
   const { data } = await supabase
     .from("lists")
     .select("*")
@@ -36,13 +38,13 @@ export default async function ListPage({
   return (
     <main className="min-h-screen">
       <SiteHeader>
-        {user ? (
-          <Link
-            href="/groups"
-            className="rounded border border-white/20 px-3 py-1.5 text-slate-100 hover:bg-white/10"
-          >
-            My groups
-          </Link>
+        {profile ? (
+          <UserMenu
+            name={displayName(profile.email, profile.full_name)}
+            email={profile.email}
+            avatarUrl={profile.avatar_url}
+            isAdmin={profile.role === "admin"}
+          />
         ) : (
           <Link href="/login" className="btn-primary px-4 py-1.5">
             Sign in
